@@ -568,18 +568,18 @@ if pagina == "🏠 Visão Geral":
             )
             st.plotly_chart(fig_hist, use_container_width=True)
 
-        # Desempenho por disciplina
-        st.markdown('<p class="section-title">💪 Desempenho Médio por Disciplina</p>',
+        # Desempenho por atividade
+        st.markdown('<p class="section-title">💪 Desempenho Médio por Atividade</p>',
                     unsafe_allow_html=True)
 
         medias_disc = {l: df_presentes[c].mean() for l, c in notas_map.items()}
         df_disc = pd.DataFrame({
-            "Disciplina": list(medias_disc.keys()),
+            "Atividade": list(medias_disc.keys()),
             "Média": list(medias_disc.values()),
         }).sort_values("Média")
 
         fig_disc = px.bar(
-            df_disc, x="Média", y="Disciplina", orientation="h", text="Média",
+            df_disc, x="Média", y="Atividade", orientation="h", text="Média",
             color_discrete_sequence=["#3b82f6"],
             title="Nota média por exercício",
         )
@@ -596,9 +596,9 @@ if pagina == "🏠 Visão Geral":
         disc_pior = df_disc.iloc[0]
         disc_melhor = df_disc.iloc[-1]
         st.info(
-            f"**📌 Insight:** A disciplina com menor média é "
-            f"**{disc_pior['Disciplina']}** ({disc_pior['Média']:.2f}). "
-            f"O ponto forte é **{disc_melhor['Disciplina']}** ({disc_melhor['Média']:.2f})."
+            f"**📌 Insight:** A atividade com menor média é "
+            f"**{disc_pior['Atividade']}** ({disc_pior['Média']:.2f}). "
+            f"O ponto forte é **{disc_melhor['Atividade']}** ({disc_melhor['Média']:.2f})."
         )
 
         # Radar Top 5 vs Bottom 5
@@ -660,17 +660,17 @@ if pagina == "🏠 Visão Geral":
         st.plotly_chart(fig_heat, use_container_width=True)
 
         # Pontos fracos
-        st.markdown('<p class="section-title">🔍 Disciplinas com Mais Pontos Fracos</p>',
+        st.markdown('<p class="section-title">🔍 Atividades com Mais Pontos Fracos</p>',
                     unsafe_allow_html=True)
 
         pf_df = df_presentes["PONTO_FRACO"].value_counts().reset_index()
-        pf_df.columns = ["Disciplina", "Quantidade"]
+        pf_df.columns = ["Atividade", "Quantidade"]
 
         fig_pf = px.bar(
-            pf_df, x="Disciplina", y="Quantidade",
+            pf_df, x="Atividade", y="Quantidade",
             color="Quantidade",
             color_continuous_scale=["#22c55e", "#f59e0b", "#ef4444"],
-            text="Quantidade", title="Disciplina com pior nota individual",
+            text="Quantidade", title="Atividade com pior nota individual",
         )
         fig_pf.update_traces(textposition="outside")
         fig_pf.update_layout(
@@ -683,7 +683,7 @@ if pagina == "🏠 Visão Geral":
         if len(pf_df) > 0:
             st.warning(
                 f"⚠️ **{pf_df.iloc[0]['Quantidade']} militares** têm pior desempenho em "
-                f"**{pf_df.iloc[0]['Disciplina']}**. Recomenda-se treino focado."
+                f"**{pf_df.iloc[0]['Atividade']}**. Recomenda-se treino focado."
             )
 
         # Tabela
@@ -727,7 +727,7 @@ if pagina == "🏠 Visão Geral":
         with c1:
             st.markdown("""
             #### 🎯 Treinamento direcionado
-            Intensificar treinos na disciplina com menor média coletiva.
+            Intensificar treinos na atividade com menor média coletiva.
             Um programa semanal específico pode elevar o desempenho
             geral em até 15% em 3 meses.
             """)
@@ -1026,21 +1026,21 @@ elif pagina == "📋 Por Quadro":
         )
         st.plotly_chart(fig_radar_q, use_container_width=True)
 
-        # Desempenho por disciplina e quadro
-        st.markdown('<p class="section-title">💪 Notas por Disciplina × Quadro</p>',
+        # Desempenho por atividade e quadro
+        st.markdown('<p class="section-title">💪 Notas por Atividade × Quadro</p>',
                     unsafe_allow_html=True)
 
         disc_data = []
         for q in df_presentes["QUADRO"].unique():
             for label, col in notas_map.items():
                 media_val = df_presentes[df_presentes["QUADRO"] == q][col].mean()
-                disc_data.append({"Quadro": q, "Disciplina": label, "Média": media_val})
+                disc_data.append({"Quadro": q, "Atividade": label, "Média": media_val})
         df_disc_q = pd.DataFrame(disc_data)
 
         fig_disc_q = px.bar(
-            df_disc_q, x="Disciplina", y="Média", color="Quadro",
+            df_disc_q, x="Atividade", y="Média", color="Quadro",
             barmode="group", text="Média",
-            title="Média por disciplina e quadro",
+            title="Média por atividade e quadro",
         )
         fig_disc_q.update_traces(texttemplate="%{text:.1f}", textposition="outside")
         fig_disc_q.update_layout(
@@ -1254,7 +1254,7 @@ elif pagina == "👤 Ficha Individual":
             st.plotly_chart(fig_b, use_container_width=True)
 
         # Cards de notas
-        st.markdown('<p class="section-title">🎯 Detalhamento por Disciplina</p>',
+        st.markdown('<p class="section-title">🎯 Detalhamento por Atividade</p>',
                     unsafe_allow_html=True)
 
         cols_disc = st.columns(5)
@@ -1352,19 +1352,19 @@ elif pagina == "📈 Estatísticas":
     if len(df_presentes) == 0:
         st.warning("Nenhum dado disponível.")
     else:
-        # Box plots por disciplina
-        st.markdown('<p class="section-title">📦 Box Plot — Notas por Disciplina</p>',
+        # Box plots por atividade
+        st.markdown('<p class="section-title">📦 Box Plot — Notas por Atividade</p>',
                     unsafe_allow_html=True)
 
         box_data = []
         for label, col in notas_map.items():
             for val in df_presentes[col].dropna():
-                box_data.append({"Disciplina": label, "Nota": val})
+                box_data.append({"Atividade": label, "Nota": val})
         df_box = pd.DataFrame(box_data)
 
         fig_box = px.box(
-            df_box, x="Disciplina", y="Nota", color="Disciplina",
-            title="Distribuição de notas por disciplina",
+            df_box, x="Atividade", y="Nota", color="Atividade",
+            title="Distribuição de notas por atividade",
         )
         fig_box.update_layout(
             **DARK, height=450, showlegend=False,
@@ -1374,7 +1374,7 @@ elif pagina == "📈 Estatísticas":
         st.plotly_chart(fig_box, use_container_width=True)
 
         # Histogramas sobrepostos
-        st.markdown('<p class="section-title">📉 Distribuição de Notas por Disciplina</p>',
+        st.markdown('<p class="section-title">📉 Distribuição de Notas por Atividade</p>',
                     unsafe_allow_html=True)
 
         fig_hist_all = go.Figure()

@@ -5,7 +5,7 @@ Corpo de Bombeiros Militar do Amazonas · 2026
 
 ## 📋 Sobre
 
-Aplicação Streamlit para análise completa dos dados do TAF do CBMAM. O sistema processa dados de desempenho físico de militares em cinco disciplinas (corrida, abdominal, flexão, natação e barra), oferecendo visualizações interativas, rankings, comparativos e análises estatísticas.
+Aplicação Streamlit para análise completa dos dados do TAF do CBMAM. O sistema processa dados de desempenho físico de militares em cinco atividades (corrida, abdominal, flexão, natação e barra), oferecendo visualizações interativas, rankings, comparativos e análises estatísticas.
 
 ## 🚀 Como executar
 
@@ -47,7 +47,7 @@ O sistema usa **TAF.csv** como fonte única de dados. O CSV contém:
 
 As notas (0-10) são calculadas a partir dos valores brutos de desempenho:
 
-| Disciplina | Métrica | Nota 10 | Nota 8 | Nota 6 |
+| Atividade | Métrica | Nota 10 | Nota 8 | Nota 6 |
 |------------|---------|---------|--------|--------|
 | Corrida 12min | Metros (↑ melhor) | ≥ 2800m | ≥ 2400m | ≥ 2000m |
 | Abdominal | Repetições (↑ melhor) | ≥ 48 | ≥ 38 | ≥ 28 |
