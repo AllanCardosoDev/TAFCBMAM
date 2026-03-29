@@ -79,7 +79,7 @@ As notas (0-10) são calculadas a partir dos valores brutos de desempenho:
 taf.py          # Aplicação Streamlit principal
 TAF.csv         # Dados do TAF (fonte única)
 requirements.txt # Dependências Python
-japura.enc      # Imagem do pelotão (opcional)
+cbmam.html
 README.md       # Documentação
 ```
 
