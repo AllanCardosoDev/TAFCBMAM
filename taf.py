@@ -5,6 +5,30 @@ import plotly.graph_objects as go
 import numpy as np
 import re
 from pathlib import Path
+from urllib.parse import unquote
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# IMAGEM CBMAM (extraída de cbmam.html)
+# ══════════════════════════════════════════════════════════════════════════════
+@st.cache_data
+def _get_cbmam_image_url() -> str:
+    """Extrai a URL da primeira imagem CBMAM encontrada em cbmam.html."""
+    html_path = Path("cbmam.html")
+    if html_path.exists():
+        try:
+            content = html_path.read_text(encoding="utf-8", errors="ignore")
+            for m in re.findall(r'mediaurl=([^&"\\]+)', content):
+                url = unquote(m)
+                if re.search(r'\.(png|jpe?g|svg|webp)$', url, re.I):
+                    return url
+        except Exception:
+            pass
+    return (
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/"
+        "Bras%C3%A3o_do_Corpo_de_Bombeiros_Militar_do_Amazonas.svg/"
+        "200px-Bras%C3%A3o_do_Corpo_de_Bombeiros_Militar_do_Amazonas.svg.png"
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -360,12 +384,7 @@ cats_radar = labels_nota + [labels_nota[0]]
 # SIDEBAR
 # ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
-    st.image(
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/"
-        "Bras%C3%A3o_do_Corpo_de_Bombeiros_Militar_do_Amazonas.svg/"
-        "200px-Bras%C3%A3o_do_Corpo_de_Bombeiros_Militar_do_Amazonas.svg.png",
-        width=80,
-    )
+    st.image(_get_cbmam_image_url(), width=80)
     st.markdown("## CBMAM · TAF 2026")
     st.markdown("**Análise de Desempenho Físico**")
     st.divider()
@@ -451,9 +470,7 @@ if pagina == "🏠 Visão Geral":
         """)
 
     with col_img:
-        foto = Path("japura.enc")
-        if foto.exists():
-            st.image(str(foto), caption="CBMAM · 2026", use_container_width=True)
+        st.image(_get_cbmam_image_url(), caption="CBMAM · 2026", use_container_width=True)
 
     st.divider()
 
