@@ -1,552 +1,386 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-import base64
+# ══════════════════════════════════════════════════════════════════════════════
+# IMAGEM CBMAM (extraída de cbmam.html)
+# ══════════════════════════════════════════════════════════════════════════════
+@st.cache_data
+def _get_cbmam_image_url() -> str:
+    """Extrai a URL da primeira imagem CBMAM encontrada em cbmam.html."""
+    html_path = Path("cbmam.html")
+    if html_path.exists():
+        try:
+            content = html_path.read_text(encoding="utf-8", errors="ignore")
+            for m in re.findall(r'mediaurl=([^&"\\]+)', content):
+                url = unquote(m)
+                if re.search(r'\.(png|jpe?g|svg|webp)$', url, re.I):
+                    return url
+        except Exception:
+            pass
+    return (
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/"
+        "Bras%C3%A3o_do_Corpo_de_Bombeiros_Militar_do_Amazonas.svg/"
+        "200px-Bras%C3%A3o_do_Corpo_de_Bombeiros_Militar_do_Amazonas.svg.png"
+    )
+
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CONFIGURAÇÃO DA PÁGINA
+# CONFIGURAÇÃO
 # ══════════════════════════════════════════════════════════════════════════════
 st.set_page_config(
-    page_title="Dashboard TAF CBMAM",
+    page_title="CBMAM · Dashboard TAF",
     page_icon="🔥",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ══════════════════════════════════════════════════════════════════════════════
-# ESTILOS CSS
-# ══════════════════════════════════════════════════════════════════════════════
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+st.markdown("""
+<style>
+  [data-testid="stAppViewContainer"] {
+    background: linear-gradient(135deg, #0b1220 0%, #0f172a 100%);
+    color: #e7eefc;
+  }
+  [data-testid="stSidebar"] {
+    background: #111b2e;
+    border-right: 1px solid rgba(255,255,255,.08);
+  }
+  [data-testid="metric-container"] {
+    background: rgba(17,27,46,.8);
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .section-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: .5px;
+    color: #ef4444;
+    margin: 28px 0 8px;
+    border-left: 4px solid #ef4444;
+    padding-left: 10px;
+  }
+  footer { visibility: hidden; }
+</style>
+""", unsafe_allow_html=True)
 
-    html, body, [class*="st-"] {
-        font-family: 'Inter', sans-serif;
-        color: #e7eefc;
-    }
-    .stApp {
-        background-color: #0d1117;
-        background-image: url(data:image/png;base64,{bg_image_base64});
-        background-size: cover;
-        background-attachment: fixed;
-        background-position: center;
-    }
-    .sidebar .sidebar-content {
-        background-color: #161b22;
-    }
-    h1, h2, h3, h4, h5, h6 {
-        color: #e7eefc;
-        font-weight: 700;
-    }
-    .section-title {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #e7eefc;
-        margin-top: 2rem;
-        margin-bottom: 1rem;
-        border-bottom: 1px solid rgba(255,255,255,.1);
-        padding-bottom: 0.5rem;
-    }
-    .stMetric {
-        background-color: rgba(17,27,46,.8);
-        border: 1px solid rgba(255,255,255,.1);
-        border-radius: 12px;
-        padding: 1rem;
-        text-align: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,.1);
-    }
-    .stMetric > div:first-child {
-        font-size: 0.85rem;
-        color: #94a3b8;
-        font-weight: 600;
-    }
-    .stMetric > div:nth-child(2) > div:first-child {
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: #e7eefc;
-    }
-    .stMetric > div:nth-child(2) > div:nth-child(2) {
-        font-size: 0.9rem;
-        color: #64748b;
-    }
-    .stButton > button {
-        background-color: #3b82f6;
-        color: white;
-        border-radius: 8px;
-        border: none;
-        padding: 0.6rem 1.2rem;
-        font-weight: 600;
-        transition: background-color 0.2s;
-    }
-    .stButton > button:hover {
-        background-color: #2563eb;
-    }
-    .stSelectbox > div > div {
-        background-color: #1e293b;
-        border: 1px solid #334155;
-        border-radius: 8px;
-        color: #e7eefc;
-    }
-    .stMultiSelect > div > div {
-        background-color: #1e293b;
-        border: 1px solid #334155;
-        border-radius: 8px;
-        color: #e7eefc;
-    }
-    .stTextInput > div > div > input {
-        background-color: #1e293b;
-        border: 1px solid #334155;
-        border-radius: 8px;
-        color: #e7eefc;
-    }
-    .stAlert {
-        border-radius: 8px;
-    }
-    .stDataFrame {
-        border-radius: 8px;
-        border: 1px solid rgba(255,255,255,.1);
-    }
-    .stMarkdown p {
-        color: #cbd5e1;
-    }
-    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
-        color: #e7eefc;
-    }
-    .css-1d391kg { /* Sidebar background */
-        background-color: #161b22;
-    }
-    .css-1lcbmhc { /* Main content padding */
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        padding-left: 3rem;
-        padding-right: 3rem;
-    }
-    .css-1lcbmhc .block-container {
-        max-width: 1200px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+DARK = dict(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#e7eefc")
+GRID = dict(gridcolor="rgba(255,255,255,.06)")
 
-# ══════════════════════════════════════════════════════════════════════════════
-# FUNÇÕES AUXILIARES E DADOS ESTÁTICOS
-# ══════════════════════════════════════════════════════════════════════════════
-
-# Carregar imagem de fundo e converter para base64
-def get_base64_image(image_path):
-    with open(image_path, "rb") as img_file:
-        return base64.b64encode(img_file.read()).decode()
-
-# Substitua 'path/to/your/background_image.jpg' pelo caminho real da sua imagem
-# bg_image_base64 = get_base64_image("assets/background.jpg") # Removido para evitar erro se a imagem não existir
-bg_image_base64 = "" # Deixado vazio para não quebrar o código se a imagem não for fornecida
-
-# Mapeamento de cores para classificações
 COR_MAP = {
     "Excelente": "#22c55e",
-    "Bom": "#3b82f6",
-    "Regular": "#f59e0b",
+    "Bom":       "#3b82f6",
+    "Regular":   "#f59e0b",
     "Insuficiente": "#ef4444",
-    "Não Compareceu": "#64748b",
+    "Ausente":   "#64748b",
 }
 
-# Configurações de tema para Plotly
-DARK = {
-    "plot_bgcolor": "rgba(0,0,0,0)",
-    "paper_bgcolor": "rgba(0,0,0,0)",
-    "font_color": "#e7eefc",
-    "title_font_color": "#e7eefc",
-    "legend_font_color": "#e7eefc",
-    "hoverlabel_bgcolor": "#1e293b",
-    "hoverlabel_font_color": "#e7eefc",
-}
-GRID = {
-    "gridcolor": "rgba(255,255,255,.1)",
-    "zerolinecolor": "rgba(255,255,255,.1)",
+ORDEM_POSTO = {
+    "CEL": 1, "TC": 2, "MAJOR": 3, "CAP": 4,
+    "1° TEN": 5, "2° TEN": 6, "ASP OF": 7,
+    "ST": 8, "1° SGT": 9, "2° SGT": 10, "3° SGT": 11,
+    "CB": 12, "SD": 13,
 }
 
-# Ordem dos postos para gráficos
-ORDEM_POSTOS = [
-    "CEL", "TC", "MAJ", "CAP", "1º TEN", "2º TEN",
-    "ASP OF", "SUB TEN", "1º SGT", "2º SGT", "3º SGT",
-    "CB", "SD"
-]
-
-def ordem_posto(posto):
-    try:
-        return ORDEM_POSTOS.index(posto)
-    except ValueError:
-        return len(ORDEM_POSTOS) # Coloca postos não listados no final
-
-# Colunas de notas e seus rótulos
-notas_map = {
-    "Corrida": "NOTA_CORRIDA",
-    "Abdominal": "NOTA_ABDOMINAL",
-    "Flexão": "NOTA_FLEXAO",
-    "Natação": "NOTA_NATACAO",
-    "Barra": "NOTA_BARRA",
-}
-colunas_nota = list(notas_map.values())
-labels_nota = list(notas_map.keys())
-cats_radar = labels_nota + [labels_nota[0]] # Para fechar o gráfico de radar
 
 # ══════════════════════════════════════════════════════════════════════════════
-# DADOS DE PONTUAÇÃO TAF (MASCULINO E FEMININO)
+# FUNÇÕES AUXILIARES
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Dados de pontuação TAF Masculino
-TAF_MASCULINO = {
-    "Corrida": {
-        "faixas": [3200, 3100, 3000, 2900, 2800, 2700, 2600, 2500, 2400, 2300, 2200, 2100, 2000, 1900, 1800, 1700, 1600, 1500],
-        "pontos": {
-            (18, 21): [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5],
-            (22, 25): [10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2],
-            (26, 29): [10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5],
-            (30, 34): [10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3],
-            (35, 39): [10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5],
-            (40, 44): [10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4],
-            (45, 49): [10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5],
-            (50, 53): [10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5],
-            (54, 57): [10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5],
-            (58, 150): [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6], # >58
-        }
-    },
-    "Flexão": {
-        "faixas": [38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21],
-        "pontos": {
-            (18, 21): [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5],
-            (22, 25): [10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2],
-            (26, 29): [10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5],
-            (30, 34): [10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3],
-            (35, 39): [10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5],
-            (40, 44): [10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4],
-            (45, 49): [10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5],
-            (50, 53): [10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5],
-            (54, 57): [10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5],
-            (58, 150): [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6], # >58
-        }
-    },
-    "Abdominal": {
-        "faixas": [48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31],
-        "pontos": {
-            (18, 21): [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5],
-            (22, 25): [10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2],
-            (26, 29): [10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5],
-            (30, 34): [10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3],
-            (35, 39): [10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5],
-            (40, 44): [10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4],
-            (45, 49): [10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5],
-            (50, 53): [10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5],
-            (54, 57): [10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5],
-            (58, 150): [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6], # >58
-        }
-    },
-    "Barra": { # Barra Dinâmica
-        "faixas": [13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
-        "pontos": {
-            (18, 21): [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4],
-            (22, 25): [10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5],
-            (26, 29): [10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5],
-            (30, 34): [10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5],
-            (35, 39): [10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6],
-            (40, 44): [10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5],
-            (45, 49): [10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7],
-            (50, 53): [10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5],
-            (54, 57): [10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8],
-            (58, 150): [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5], # >58
-        }
-    },
-    "Barra_Est": { # Barra Estática (segundos)
-        "faixas": [60, 57, 55, 53, 51, 49, 47, 45, 43, 41, 39, 37, 35, 33, 31, 29, 27, 25],
-        "pontos": {
-            (18, 21): [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5],
-            (22, 25): [10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2],
-            (26, 29): [10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5],
-            (30, 34): [10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3],
-            (35, 39): [10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5],
-            (40, 44): [10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4],
-            (45, 49): [10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5],
-            (50, 53): [10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5],
-            (54, 57): [10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5],
-            (58, 150): [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6], # >58
-        }
-    },
-    "Natacao": {
-        "faixas": [40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108], # segundos
-        "pontos": {
-            (18, 21): [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5],
-            (22, 25): [10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2],
-            (26, 29): [10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5],
-            (30, 34): [10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3],
-            (35, 39): [10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5],
-            (40, 44): [10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4],
-            (45, 49): [10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5],
-            (50, 53): [10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5],
-            (54, 57): [10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5],
-            (58, 150): [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6], # >58
-        }
-    },
-}
-
-# Dados de pontuação TAF Feminino
-TAF_FEMININO = {
-    "Corrida": {
-        "faixas": [2700, 2600, 2500, 2400, 2300, 2200, 2100, 2000, 1900, 1800, 1700, 1600, 1500, 1400, 1300, 1200, 1100, 1000],
-        "pontos": {
-            (18, 21): [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5],
-            (22, 25): [10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2],
-            (26, 29): [10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5],
-            (30, 34): [10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3],
-            (35, 39): [10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5],
-            (40, 44): [10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4],
-            (45, 49): [10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5],
-            (50, 53): [10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5],
-            (54, 57): [10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5],
-            (58, 150): [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6], # >58
-        }
-    },
-    "Flexão": {
-        "faixas": [30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13],
-        "pontos": {
-            (18, 21): [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5],
-            (22, 25): [10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2],
-            (26, 29): [10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5],
-            (30, 34): [10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3],
-            (35, 39): [10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5],
-            (40, 44): [10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4],
-            (45, 49): [10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5],
-            (50, 53): [10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5],
-            (54, 57): [10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5],
-            (58, 150): [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6], # >58
-        }
-    },
-    "Abdominal": {
-        "faixas": [42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25],
-        "pontos": {
-            (18, 21): [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5],
-            (22, 25): [10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2],
-            (26, 29): [10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5],
-            (30, 34): [10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3],
-            (35, 39): [10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5],
-            (40, 44): [10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4],
-            (45, 49): [10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5],
-            (50, 53): [10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5],
-            (54, 57): [10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5],
-            (58, 150): [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6], # >58
-        }
-    },
-    "Barra": { # Barra Estática (segundos)
-        "faixas": [50, 47, 45, 43, 41, 39, 37, 35, 33, 31, 29, 27, 25, 23, 21, 19, 17],
-        "pontos": {
-            (18, 21): [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2],
-            (22, 25): [10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5],
-            (26, 29): [10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3],
-            (30, 34): [10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5],
-            (35, 39): [10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4],
-            (40, 44): [10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5],
-            (45, 49): [10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5],
-            (50, 53): [10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5],
-            (54, 57): [10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6],
-            (58, 150): [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6], # >58
-        }
-    },
-    "Natacao": {
-        "faixas": [58, 62, 66, 70, 74, 78, 82, 86, 90, 94, 98, 102, 106, 110, 114, 118, 122], # segundos
-        "pontos": {
-            (18, 21): [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2],
-            (22, 25): [10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5],
-            (26, 29): [10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3],
-            (30, 34): [10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5],
-            (35, 39): [10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4],
-            (40, 44): [10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5],
-            (45, 49): [10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5],
-            (50, 53): [10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5],
-            (54, 57): [10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6],
-            (58, 150): [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6], # >58
-        }
-    },
-}
-
-# Função para obter a nota baseada na idade, sexo e desempenho
-def get_nota_taf(exercicio, desempenho, idade, sexo, barra_tipo=None):
-    if pd.isna(desempenho) or pd.isna(idade) or pd.isna(sexo):
+def parse_time(val):
+    """Converte formatos de tempo como 01'04", 47", 1'09" para segundos."""
+    if pd.isna(val):
         return np.nan
+    s = str(val).strip()
+    if any(x in s.upper() for x in ["NÃO", "COMPARECEU", "APTO"]):
+        return np.nan
+    s = s.replace('"', "'").replace("''", "'").strip("'").strip()
+    m = re.match(r"^0*(\d+)'(\d+)$", s)
+    if m:
+        return int(m.group(1)) * 60 + int(m.group(2))
+    m = re.match(r"^(\d+)$", s)
+    if m:
+        return int(m.group(1))
+    return np.nan
 
-    tabela_referencia = TAF_MASCULINO if sexo == "M" else TAF_FEMININO
 
-    # Ajuste para Barra (Dinâmica vs Estática)
-    if exercicio == "Barra":
-        if sexo == "M": # Masculino usa Barra Dinâmica
-            exercicio_key = "Barra"
-        else: # Feminino usa Barra Estática
-            exercicio_key = "Barra_Est"
-    else:
-        exercicio_key = exercicio
+def classificar_barra_tipo(val_raw):
+    """Classifica se o valor da barra é dinâmica (reps) ou estática (tempo)."""
+    if pd.isna(val_raw):
+        return None
+    s = str(val_raw).strip()
+    if any(x in s.upper() for x in ["NÃO", "COMPARECEU"]):
+        return None
+    if "'" in s or '"' in s:
+        return "ESTATICA"
+    try:
+        float(s)
+        return "DINAMICA"
+    except ValueError:
+        return None
 
-    if exercicio_key not in tabela_referencia:
-        return np.nan # Exercício não encontrado na tabela de referência
 
-    faixas_desempenho = tabela_referencia[exercicio_key]["faixas"]
-    pontos_idade = tabela_referencia[exercicio_key]["pontos"]
+# ── Tabelas de Pontuação TAF ────────────────────────────────────────────────
 
-    # Encontrar a faixa etária correta
-    faixa_etaria_encontrada = None
-    for faixa_min, faixa_max in pontos_idade.keys():
-        if faixa_min <= idade <= faixa_max:
-            faixa_etaria_encontrada = (faixa_min, faixa_max)
-            break
+def nota_corrida(metros):
+    if pd.isna(metros): return np.nan
+    m = float(metros)
+    if m > 5000: m = m / 10
+    if m >= 2800: return 10.0
+    if m >= 2600: return 9.0
+    if m >= 2400: return 8.0
+    if m >= 2200: return 7.0
+    if m >= 2000: return 6.0
+    if m >= 1800: return 5.0
+    return 4.0
 
-    if faixa_etaria_encontrada is None:
-        return np.nan # Idade fora das faixas definidas
 
-    pontuacoes = pontos_idade[faixa_etaria_encontrada]
+def nota_abdominal(reps):
+    if pd.isna(reps): return np.nan
+    r = float(reps)
+    if r >= 48: return 10.0
+    if r >= 42: return 9.0
+    if r >= 38: return 8.0
+    if r >= 33: return 7.0
+    if r >= 28: return 6.0
+    if r >= 22: return 5.0
+    return 4.0
 
-    # Encontrar a pontuação para o desempenho
-    nota = 0.0
-    for i, limite in enumerate(faixas_desempenho):
-        if exercicio == "Natacao": # Natação é tempo, menor é melhor
-            if desempenho <= limite:
-                nota = pontuacoes[i]
-                break
-        else: # Outros exercícios, maior é melhor
-            if desempenho >= limite:
-                nota = pontuacoes[i]
-                break
-    else: # Se não atingiu nenhuma faixa, a nota é a menor possível ou 0
-        nota = pontuacoes[-1] if pontuacoes else 0.0 # Garante que pega a menor nota se o desempenho for muito baixo
-        # Se o desempenho for abaixo da menor faixa, a nota é 0.0 (insuficiente)
-        if exercicio == "Natacao":
-            if desempenho > faixas_desempenho[-1]: # Se o tempo for maior que o pior tempo da tabela
-                nota = 0.0
-        else:
-            if desempenho < faixas_desempenho[-1]: # Se o desempenho for menor que o pior desempenho da tabela
-                nota = 0.0
 
-    return nota
+def nota_flexao(reps):
+    if pd.isna(reps): return np.nan
+    r = float(reps)
+    if r >= 38: return 10.0
+    if r >= 33: return 9.0
+    if r >= 28: return 8.0
+    if r >= 23: return 7.0
+    if r >= 18: return 6.0
+    if r >= 13: return 5.0
+    return 4.0
+
+
+def nota_natacao(segs):
+    if pd.isna(segs): return np.nan
+    s = float(segs)
+    if s <= 35: return 10.0
+    if s <= 40: return 9.0
+    if s <= 45: return 8.0
+    if s <= 50: return 7.0
+    if s <= 55: return 6.0
+    if s <= 60: return 5.0
+    if s <= 70: return 4.0
+    return 3.0
+
+
+def nota_barra_din(reps):
+    if pd.isna(reps): return np.nan
+    r = float(reps)
+    if r >= 14: return 10.0
+    if r >= 12: return 9.0
+    if r >= 10: return 8.0
+    if r >= 8: return 7.0
+    if r >= 6: return 6.0
+    if r >= 4: return 5.0
+    return 4.0
+
+
+def nota_barra_est(segs):
+    if pd.isna(segs): return np.nan
+    s = float(segs)
+    if s >= 70: return 10.0
+    if s >= 60: return 9.0
+    if s >= 50: return 8.0
+    if s >= 40: return 7.0
+    if s >= 30: return 6.0
+    if s >= 20: return 5.0
+    return 4.0
+
+
+def classificar_media(m):
+    if pd.isna(m): return "Ausente"
+    if m >= 9.0: return "Excelente"
+    if m >= 7.5: return "Bom"
+    if m >= 6.0: return "Regular"
+    return "Insuficiente"
+
+
+def normalizar_posto(p):
+    """Normaliza variações de posto/graduação (º vs °)."""
+    s = str(p).strip().upper()
+    s = s.replace("º", "°")
+    return s
+
+
+def ordem_posto(p):
+    return ORDEM_POSTO.get(p, 99)
+
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CARREGAMENTO E PRÉ-PROCESSAMENTO DOS DADOS
+# CARREGAMENTO DE DADOS
 # ══════════════════════════════════════════════════════════════════════════════
 
 @st.cache_data
-def load_data():
-    # Dados fictícios para demonstração
-    data = {
-        "ORD": list(range(1, 51)),
-        "NOME": [f"MILITAR {i}" for i in range(1, 51)],
-        "POSTO_GRAD": np.random.choice(ORDEM_POSTOS, 50),
-        "QUADRO": np.random.choice(["QCOBM", "QCPBM", "QPBM"], 50),
-        "SEXO": np.random.choice(["M", "F"], 50),
-        "IDADE": np.random.randint(20, 60, 50),
-        "PRESENTE": np.random.choice([True, False], 50, p=[0.9, 0.1]),
-        "CORRIDA_RAW": np.random.randint(1500, 3500, 50), # metros
-        "ABDOMINAL_RAW": np.random.randint(20, 50, 50), # reps
-        "FLEXAO_RAW": np.random.randint(15, 40, 50), # reps
-        "NATACAO_RAW": np.random.randint(40, 120, 50), # segundos
-        "BARRA_RAW": np.random.randint(0, 15, 50), # reps (dinâmica) ou segundos (estática)
-        "BARRA_TIPO": np.random.choice(["Dinâmica", "Estática"], 50), # Tipo de barra para feminino
-        "TAF_ADAPTADO": np.random.choice([True, False], 50, p=[0.05, 0.95]),
-        "PONTO_FRACO": np.random.choice(labels_nota, 50),
-    }
-    df = pd.DataFrame(data)
+def carregar_dados():
+    """Carrega e processa o TAF.csv — seção Regular (TAF completo)."""
+    df_raw = pd.read_csv("TAF.csv", header=None, encoding="utf-8-sig", dtype=str)
 
-    # Simular alguns ausentes e TAF adaptado
-    df.loc[df["PRESENTE"] == False, ["CORRIDA_RAW", "ABDOMINAL_RAW", "FLEXAO_RAW", "NATACAO_RAW", "BARRA_RAW"]] = np.nan
-    df.loc[df["TAF_ADAPTADO"] == True, ["CORRIDA_RAW", "ABDOMINAL_RAW", "FLEXAO_RAW", "NATACAO_RAW", "BARRA_RAW"]] = np.nan
-    df.loc[df["TAF_ADAPTADO"] == True, "PONTO_FRACO"] = np.nan
+    # Encontrar marcadores de seção
+    headers = []
+    adapted_marker = None
+    for i in range(len(df_raw)):
+        cell = str(df_raw.iloc[i, 0]).strip()
+        if cell == "ORD":
+            headers.append(i)
+        if "TAF ADAPTADO" in cell:
+            adapted_marker = i
 
-    # Calcular notas baseadas nas regras de idade e sexo
-    df["NOTA_CORRIDA"] = df.apply(lambda row: get_nota_taf("Corrida", row["CORRIDA_RAW"], row["IDADE"], row["SEXO"]), axis=1)
-    df["NOTA_ABDOMINAL"] = df.apply(lambda row: get_nota_taf("Abdominal", row["ABDOMINAL_RAW"], row["IDADE"], row["SEXO"]), axis=1)
-    df["NOTA_FLEXAO"] = df.apply(lambda row: get_nota_taf("Flexão", row["FLEXAO_RAW"], row["IDADE"], row["SEXO"]), axis=1)
-    df["NOTA_NATACAO"] = df.apply(lambda row: get_nota_taf("Natacao", row["NATACAO_RAW"], row["IDADE"], row["SEXO"]), axis=1)
+    # Seções regulares: antes do TAF ADAPTADO
+    regular_headers = [h for h in headers if adapted_marker is None or h < adapted_marker]
 
-    # Lógica para Barra: Masculino usa Barra Dinâmica, Feminino usa Barra Estática
-    df["NOTA_BARRA"] = df.apply(
-        lambda row: get_nota_taf("Barra", row["BARRA_RAW"], row["IDADE"], row["SEXO"]) if row["SEXO"] == "M" else \
-                    get_nota_taf("Barra_Est", row["BARRA_RAW"], row["IDADE"], row["SEXO"]), axis=1
+    sections = []
+    for idx, h in enumerate(regular_headers):
+        if idx + 1 < len(regular_headers):
+            end = regular_headers[idx + 1] - 3
+        elif adapted_marker:
+            end = adapted_marker
+        else:
+            end = len(df_raw)
+
+        section = df_raw.iloc[h + 1:end].copy()
+        section = section[section.iloc[:, 0].notna()]
+        section = section[~section.iloc[:, 0].astype(str).str.strip().isin(["", "nan"])]
+        section = section[~section.iloc[:, 0].astype(str).str.contains(
+            r"TAF|FALTOU|MILITARES|^B$|^A$|DESEMPENHO", case=False, na=False
+        )]
+        section = section[pd.to_numeric(section.iloc[:, 0], errors="coerce").notna()]
+        sections.append(section)
+
+    df = pd.concat(sections, ignore_index=True)
+    df = df.iloc[:, :9]
+    df.columns = ["ORD", "POSTO_GRAD", "QUADRO", "NOME",
+                  "CORRIDA_RAW", "ABDOMINAL_RAW", "FLEXAO_RAW",
+                  "NATACAO_RAW", "BARRA_RAW"]
+
+    # Limpar strings
+    df["NOME"] = df["NOME"].astype(str).str.strip().str.upper()
+    df["POSTO_GRAD"] = df["POSTO_GRAD"].astype(str).apply(normalizar_posto)
+    df["QUADRO"] = df["QUADRO"].astype(str).str.strip().str.upper()
+    df["ORD"] = pd.to_numeric(df["ORD"], errors="coerce").astype("Int64")
+
+    # Marcar presentes/ausentes
+    df["PRESENTE"] = ~df["CORRIDA_RAW"].astype(str).str.upper().str.contains(
+        "NÃO COMPARECEU", na=False
     )
 
-    # Média final e classificação
-    df["MEDIA_FINAL"] = df[colunas_nota].mean(axis=1)
+    # Parsear valores brutos
+    df["CORRIDA"] = pd.to_numeric(
+        df["CORRIDA_RAW"].astype(str).str.replace(",", ".", regex=False).str.strip(),
+        errors="coerce"
+    )
+    df.loc[df["CORRIDA"] > 5000, "CORRIDA"] = df.loc[df["CORRIDA"] > 5000, "CORRIDA"] / 10
+    df["ABDOMINAL"] = pd.to_numeric(df["ABDOMINAL_RAW"], errors="coerce")
+    df["FLEXAO"] = pd.to_numeric(df["FLEXAO_RAW"], errors="coerce")
+    df["NATACAO_SEG"] = df["NATACAO_RAW"].apply(parse_time)
+    df["BARRA_TIPO"] = df["BARRA_RAW"].apply(classificar_barra_tipo)
+    df["BARRA_VALOR"] = df["BARRA_RAW"].apply(parse_time)
 
-    def classificar(media):
-        if pd.isna(media):
-            return "Não Compareceu"
-        if media >= 9.0:
-            return "Excelente"
-        elif media >= 7.5:
-            return "Bom"
-        elif media >= 6.0:
-            return "Regular"
-        else:
-            return "Insuficiente"
+    # Calcular notas
+    df["NOTA_CORRIDA"] = df["CORRIDA"].apply(nota_corrida)
+    df["NOTA_ABDOMINAL"] = df["ABDOMINAL"].apply(nota_abdominal)
+    df["NOTA_FLEXAO"] = df["FLEXAO"].apply(nota_flexao)
+    df["NOTA_NATACAO"] = df["NATACAO_SEG"].apply(nota_natacao)
 
-    df["CLASSIFICACAO"] = df["MEDIA_FINAL"].apply(classificar)
+    df["NOTA_BARRA"] = np.nan
+    mask_din = df["BARRA_TIPO"] == "DINAMICA"
+    mask_est = df["BARRA_TIPO"] == "ESTATICA"
+    df.loc[mask_din, "NOTA_BARRA"] = df.loc[mask_din, "BARRA_VALOR"].apply(nota_barra_din)
+    df.loc[mask_est, "NOTA_BARRA"] = df.loc[mask_est, "BARRA_VALOR"].apply(nota_barra_est)
 
-    # Identificar o ponto fraco (menor nota)
-    def find_ponto_fraco(row):
-        if row["PRESENTE"] == False or row["TAF_ADAPTADO"] == True:
-            return np.nan
-        notas = {label: row[col] for label, col in notas_map.items()}
-        min_nota = min(notas.values())
-        if pd.isna(min_nota):
-            return np.nan
+    # Média final
+    nota_cols = ["NOTA_CORRIDA", "NOTA_ABDOMINAL", "NOTA_FLEXAO", "NOTA_NATACAO", "NOTA_BARRA"]
+    df["MEDIA_FINAL"] = df[nota_cols].mean(axis=1)
+    df["CLASSIFICACAO"] = df["MEDIA_FINAL"].apply(classificar_media)
 
-        # Se a menor nota for 0, verificar se todas as notas são 0 ou NaN
-        if min_nota == 0.0:
-            if all(pd.isna(v) or v == 0.0 for v in notas.values()):
-                return "Não avaliado/Todas insuficientes" # Ou outro rótulo apropriado
+    # Ponto fraco e forte
+    notas_map = {
+        "Corrida 12min": "NOTA_CORRIDA",
+        "Abdominal": "NOTA_ABDOMINAL",
+        "Flexão": "NOTA_FLEXAO",
+        "Natação 50m": "NOTA_NATACAO",
+        "Barra": "NOTA_BARRA",
+    }
 
-        # Se houver notas válidas, encontrar o exercício com a menor nota
-        for label, nota in notas.items():
-            if nota == min_nota:
-                return label
-        return np.nan
+    def ponto_fraco(row):
+        vals = {k: float(row[v]) for k, v in notas_map.items() if pd.notna(row[v])}
+        return min(vals, key=vals.get) if vals else "—"
 
-    df["PONTO_FRACO"] = df.apply(find_ponto_fraco, axis=1)
+    def ponto_forte(row):
+        vals = {k: float(row[v]) for k, v in notas_map.items() if pd.notna(row[v])}
+        return max(vals, key=vals.get) if vals else "—"
+
+    df["PONTO_FRACO"] = df.apply(ponto_fraco, axis=1)
+    df["PONTO_FORTE"] = df.apply(ponto_forte, axis=1)
+
+    return df, notas_map
 
 
+@st.cache_data
+def carregar_adaptado():
+    """Carrega e processa o TAF.csv — seção TAF Adaptado."""
+    df_raw = pd.read_csv("TAF.csv", header=None, encoding="utf-8-sig", dtype=str)
+
+    adapted_marker = None
+    adapted_header = None
+    for i in range(len(df_raw)):
+        cell = str(df_raw.iloc[i, 0]).strip()
+        if "TAF ADAPTADO" in cell:
+            adapted_marker = i
+        if cell == "ORD" and adapted_marker is not None:
+            adapted_header = i
+            break
+
+    if adapted_header is None:
+        return pd.DataFrame()
+
+    df = df_raw.iloc[adapted_header + 1:].copy()
+    df = df[df.iloc[:, 0].notna()]
+    df = df[pd.to_numeric(df.iloc[:, 0], errors="coerce").notna()]
+
+    cols = ["ORD", "POSTO_GRAD", "QUADRO", "NOME", "CAMINHADA", "ABDOMINAL",
+            "FLEXAO", "PRANCHA", "NATACAO", "BARRA_EST", "BARRA_DIN",
+            "CORRIDA", "PUXADOR_FRONTAL", "FLUTUACAO", "SUPINO", "COOPER"]
+    df = df.iloc[:, :min(16, df.shape[1])]
+    while len(df.columns) < 16:
+        df[f"_pad_{len(df.columns)}"] = np.nan
+    df.columns = cols[:len(df.columns)]
+
+    df["NOME"] = df["NOME"].astype(str).str.strip().str.upper()
+    df["POSTO_GRAD"] = df["POSTO_GRAD"].astype(str).apply(normalizar_posto)
+    df["QUADRO"] = df["QUADRO"].astype(str).str.strip().str.upper()
+    df["PRESENTE"] = ~df["CAMINHADA"].astype(str).str.upper().str.contains(
+        "NÃO COMPARECEU", na=False
+    )
     return df
 
-df_all = load_data()
 
-# Filtros globais
+# ══════════════════════════════════════════════════════════════════════════════
+# CARREGAR DADOS
+# ══════════════════════════════════════════════════════════════════════════════
+df_all, notas_map = carregar_dados()
+df_adaptado = carregar_adaptado()
+
+colunas_nota = list(notas_map.values())
+labels_nota = list(notas_map.keys())
+cats_radar = labels_nota + [labels_nota[0]]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SIDEBAR
+# ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Bras%C3%A3o_do_Corpo_de_Bombeiros_Militar_do_Amazonas.svg/1200px-Bras%C3%A3o_do_Corpo_de_Bombeiros_Militar_do_Amazonas.svg.png", width=100)
-    st.title("🔥 Dashboard TAF CBMAM")
-    st.markdown("---")
+    st.image(_get_cbmam_image_url(), width=80)
+    st.markdown("## CBMAM · TAF 2026")
+    st.markdown("**Análise de Desempenho Físico**")
+    st.divider()
 
-    st.markdown("### ⚙️ Filtros")
-    postos_selecionados = st.multiselect(
-        "Posto/Graduação",
-        options=df_all["POSTO_GRAD"].unique(),
-        default=df_all["POSTO_GRAD"].unique(),
-    )
-    quadros_selecionados = st.multiselect(
-        "Quadro",
-        options=df_all["QUADRO"].unique(),
-        default=df_all["QUADRO"].unique(),
-    )
-    sexo_selecionado = st.multiselect(
-        "Sexo",
-        options=df_all["SEXO"].unique(),
-        default=df_all["SEXO"].unique(),
-    )
-    idade_min, idade_max = st.slider(
-        "Faixa Etária",
-        min_value=int(df_all["IDADE"].min()),
-        max_value=int(df_all["IDADE"].max()),
-        value=(int(df_all["IDADE"].min()), int(df_all["IDADE"].max())),
-    )
-
-    st.markdown("---")
     pagina = st.radio(
-        "Navegação",
+        "📌 Navegação",
         [
             "🏠 Visão Geral",
             "🪖 Por Posto/Graduação",
@@ -555,113 +389,184 @@ with st.sidebar:
             "📈 Estatísticas",
             "♿ TAF Adaptado",
         ],
+        label_visibility="collapsed",
     )
 
-# Aplicar filtros
-df_filtered = df_all[
-    (df_all["POSTO_GRAD"].isin(postos_selecionados)) &
-    (df_all["QUADRO"].isin(quadros_selecionados)) &
-    (df_all["SEXO"].isin(sexo_selecionado)) &
-    (df_all["IDADE"] >= idade_min) &
-    (df_all["IDADE"] <= idade_max)
-]
+    st.divider()
 
-df_presentes = df_filtered[df_filtered["PRESENTE"] & (df_filtered["TAF_ADAPTADO"] == False)].copy()
-df_ausentes = df_filtered[df_filtered["PRESENTE"] == False].copy()
-df_adaptado = df_filtered[df_filtered["TAF_ADAPTADO"] == True].copy()
+    # Filtros globais
+    if pagina not in ["👤 Ficha Individual", "♿ TAF Adaptado"]:
+        st.markdown("**🔧 Filtros**")
+
+        postos_disponiveis = sorted(
+            df_all[df_all["PRESENTE"]]["POSTO_GRAD"].unique().tolist(),
+            key=lambda x: ordem_posto(x),
+        )
+        filtro_posto = st.multiselect("Posto/Graduação", postos_disponiveis,
+                                       default=postos_disponiveis)
+
+        quadros_disponiveis = sorted(df_all[df_all["PRESENTE"]]["QUADRO"].unique().tolist())
+        filtro_quadro = st.multiselect("Quadro", quadros_disponiveis,
+                                        default=quadros_disponiveis)
+
+        mostrar_ausentes = st.checkbox("Incluir ausentes", value=False)
+
+        nota_minima = st.slider("Média mínima", 0.0, 10.0, 0.0, 0.1)
+    else:
+        filtro_posto = df_all["POSTO_GRAD"].unique().tolist()
+        filtro_quadro = df_all["QUADRO"].unique().tolist()
+        mostrar_ausentes = False
+        nota_minima = 0.0
+
+    st.divider()
+    efetivo_total = len(df_all)
+    presentes_total = int(df_all["PRESENTE"].sum())
+    st.markdown(
+        f"<small>Efetivo: {efetivo_total} · Presentes: {presentes_total}<br>"
+        f"CBMAM · BM-6/EMG · 2026</small>",
+        unsafe_allow_html=True,
+    )
+
+
+# ── Filtrar dados ────────────────────────────────────────────────────────────
+df_f = df_all.copy()
+if not mostrar_ausentes:
+    df_f = df_f[df_f["PRESENTE"]]
+df_f = df_f[df_f["POSTO_GRAD"].isin(filtro_posto)]
+df_f = df_f[df_f["QUADRO"].isin(filtro_quadro)]
+df_f = df_f[df_f["MEDIA_FINAL"].fillna(0) >= nota_minima]
+
+# Dados apenas de presentes para cálculos
+df_presentes = df_f[df_f["PRESENTE"] & df_f["MEDIA_FINAL"].notna()]
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PÁGINA: VISÃO GERAL
 # ══════════════════════════════════════════════════════════════════════════════
 if pagina == "🏠 Visão Geral":
-    st.markdown(
-        """
-    <h1 style="margin:0;font-size:2rem;">🏠 Visão Geral do TAF 2026</h1>
-    <p style="margin:6px 0 12px;color:#94a3b8;">
-      Análise de desempenho do Teste de Aptidão Física do CBMAM
-    </p>
-    """,
-        unsafe_allow_html=True,
-    )
+
+    col_txt, col_img = st.columns([2.2, 1])
+    with col_txt:
+        st.markdown("""
+        <h1 style="margin:0;font-size:2rem;">🔥 Dashboard TAF · CBMAM</h1>
+        <p style="margin:6px 0 12px;color:#94a3b8;">
+          Corpo de Bombeiros Militar do Amazonas · Avaliação Física 2026
+        </p>
+        """, unsafe_allow_html=True)
+        st.markdown("""
+        > **Análise completa do Teste de Aptidão Física** com dados de desempenho
+        > em corrida, abdominal, flexão, natação e barra. Filtre por posto/graduação
+        > e quadro para uma visão detalhada.
+        """)
+
+    with col_img:
+        st.image(_get_cbmam_image_url(), caption="CBMAM · 2026", use_container_width=True)
+
     st.divider()
 
-    if len(df_presentes) > 0:
-        # KPIs
-        total_militares = len(df_filtered)
-        presentes = len(df_presentes)
-        ausentes = len(df_ausentes)
-        adaptados = len(df_adaptado)
-        media_geral = df_presentes["MEDIA_FINAL"].mean()
-        taxa_aprovacao = (
-            (df_presentes["CLASSIFICACAO"].isin(["Excelente", "Bom", "Regular"])).sum()
-            / presentes
-            * 100
-        ) if presentes > 0 else 0
+    # KPIs
+    st.markdown('<p class="section-title">📊 Indicadores Gerais</p>',
+                unsafe_allow_html=True)
 
-        c1, c2, c3, c4, c5 = st.columns(5)
-        c1.metric("👥 Total Militares", total_militares)
-        c2.metric("✅ Presentes", presentes)
-        c3.metric("❌ Ausentes", ausentes)
-        c4.metric("♿ TAF Adaptado", adaptados)
-        c5.metric("📈 Média Geral", f"{media_geral:.2f}")
+    if len(df_presentes) > 0:
+        k1, k2, k3, k4, k5, k6 = st.columns(6)
+        media_geral = df_presentes["MEDIA_FINAL"].mean()
+        melhor = df_presentes.loc[df_presentes["MEDIA_FINAL"].idxmax()]
+        pior = df_presentes.loc[df_presentes["MEDIA_FINAL"].idxmin()]
+        n_excelentes = len(df_presentes[df_presentes["CLASSIFICACAO"] == "Excelente"])
+        n_insuficientes = len(df_presentes[df_presentes["CLASSIFICACAO"] == "Insuficiente"])
+        n_ausentes = len(df_all[~df_all["PRESENTE"]])
+
+        k1.metric("👥 Presentes", len(df_presentes))
+        k2.metric("📈 Média Geral", f"{media_geral:.2f}")
+        k3.metric("🥇 Maior Média", f"{melhor['MEDIA_FINAL']:.1f}",
+                   melhor["NOME"].split()[0])
+        k4.metric("⚠️ Menor Média", f"{pior['MEDIA_FINAL']:.1f}",
+                   pior["NOME"].split()[0])
+        k5.metric("✅ Excelentes", n_excelentes)
+        k6.metric("🚨 Insuficientes / Ausentes", f"{n_insuficientes} / {n_ausentes}")
 
         st.divider()
 
-        # Distribuição de Classificação
-        st.markdown(
-            '<p class="section-title">📊 Distribuição de Classificação</p>',
-            unsafe_allow_html=True,
-        )
-        classificacao_counts = (
-            df_presentes["CLASSIFICACAO"].value_counts(normalize=True) * 100
-        ).reset_index()
-        classificacao_counts.columns = ["Classificação", "Percentual"]
-        classificacao_counts["Classificação"] = pd.Categorical(
-            classificacao_counts["Classificação"],
-            categories=["Excelente", "Bom", "Regular", "Insuficiente"],
-            ordered=True,
-        )
-        classificacao_counts = classificacao_counts.sort_values("Classificação")
+        # Ranking
+        st.markdown('<p class="section-title">🏆 Ranking — Média Final</p>',
+                    unsafe_allow_html=True)
 
-        fig_class = px.bar(
-            classificacao_counts,
-            x="Classificação",
-            y="Percentual",
-            color="Classificação",
-            color_discrete_map=COR_MAP,
-            text="Percentual",
-            title="Percentual de Militares por Classificação",
-        )
-        fig_class.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
-        fig_class.update_layout(
-            **DARK,
-            height=400,
-            xaxis=dict(**GRID),
-            yaxis=dict(range=[0, 100], **GRID),
-            margin=dict(t=50, b=20),
-        )
-        st.plotly_chart(fig_class, use_container_width=True)
-
-        st.info(
-            f"**✅ Taxa de Aprovação:** {taxa_aprovacao:.1f}% dos militares "
-            "presentes atingiram a classificação Regular ou superior."
+        df_rank = df_presentes.sort_values("MEDIA_FINAL", ascending=True).copy()
+        df_rank["LABEL"] = df_rank.apply(
+            lambda r: f"{r['POSTO_GRAD']} {' '.join(str(r['NOME']).split()[:2])}", axis=1
         )
 
-        # Média por disciplina
-        st.markdown(
-            '<p class="section-title">💪 Média de Notas por Atividade</p>',
-            unsafe_allow_html=True,
+        fig_rank = px.bar(
+            df_rank, x="MEDIA_FINAL", y="LABEL", orientation="h",
+            color="CLASSIFICACAO", color_discrete_map=COR_MAP,
+            text="MEDIA_FINAL",
+            hover_data={"NOME": True, "MEDIA_FINAL": True, "CLASSIFICACAO": True,
+                       "POSTO_GRAD": True, "QUADRO": True},
+            labels={"MEDIA_FINAL": "Média Final", "LABEL": ""},
         )
+        fig_rank.update_traces(texttemplate="%{text:.1f}", textposition="outside")
+        fig_rank.update_layout(
+            **DARK, height=max(500, len(df_rank) * 20),
+            legend_title_text="Classificação",
+            xaxis=dict(range=[0, 11], **GRID),
+            yaxis=dict(**GRID),
+            margin=dict(l=10, r=60, t=20, b=20),
+        )
+        st.plotly_chart(fig_rank, use_container_width=True)
 
-        df_disc = (
-            df_presentes[colunas_nota].mean().reset_index()
-        )
-        df_disc.columns = ["Atividade", "Média"]
-        df_disc["Atividade"] = df_disc["Atividade"].map(
-            {v: k for k, v in notas_map.items()}
-        )
-        df_disc = df_disc.sort_values("Média", ascending=True)
+        # Distribuição
+        st.markdown('<p class="section-title">📉 Distribuição de Desempenho</p>',
+                    unsafe_allow_html=True)
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            contagem = df_presentes["CLASSIFICACAO"].value_counts().reset_index()
+            contagem.columns = ["Classificação", "Quantidade"]
+            ordem = ["Excelente", "Bom", "Regular", "Insuficiente"]
+            contagem["Classificação"] = pd.Categorical(
+                contagem["Classificação"], categories=ordem, ordered=True
+            )
+            fig_pie = px.pie(
+                contagem.sort_values("Classificação"),
+                names="Classificação", values="Quantidade",
+                color="Classificação", color_discrete_map=COR_MAP,
+                hole=0.52, title="Proporção por Classificação",
+            )
+            fig_pie.update_layout(
+                **DARK,
+                legend=dict(orientation="h", yanchor="bottom", y=-0.2),
+                margin=dict(t=50, b=10),
+            )
+            st.plotly_chart(fig_pie, use_container_width=True)
+
+        with col_b:
+            fig_hist = px.histogram(
+                df_presentes, x="MEDIA_FINAL", nbins=15,
+                color_discrete_sequence=["#3b82f6"],
+                title="Histograma de Médias",
+                labels={"MEDIA_FINAL": "Média Final", "count": "Frequência"},
+            )
+            fig_hist.add_vline(
+                x=media_geral, line_dash="dash", line_color="#ef4444",
+                annotation_text=f"Média: {media_geral:.2f}",
+                annotation_font_color="#ef4444",
+            )
+            fig_hist.update_layout(
+                **DARK, margin=dict(t=50, b=10),
+                yaxis=dict(**GRID), xaxis=dict(**GRID),
+            )
+            st.plotly_chart(fig_hist, use_container_width=True)
+
+        # Desempenho por atividade
+        st.markdown('<p class="section-title">💪 Desempenho Médio por Atividade</p>',
+                    unsafe_allow_html=True)
+
+        medias_disc = {l: df_presentes[c].mean() for l, c in notas_map.items()}
+        df_disc = pd.DataFrame({
+            "Atividade": list(medias_disc.keys()),
+            "Média": list(medias_disc.values()),
+        }).sort_values("Média")
 
         fig_disc = px.bar(
             df_disc, x="Média", y="Atividade", orientation="h", text="Média",
@@ -724,7 +629,7 @@ if pagina == "🏠 Visão Geral":
         df_heat["LABEL"] = df_heat.apply(
             lambda r: f"{r['POSTO_GRAD']} {' '.join(str(r['NOME']).split()[:2])}", axis=1
         )
-        df_heat = df_heat.sort_values("MEDIA_FINAL", ascending=False) # Ordenar pelo MEDIA_FINAL
+        df_heat = df_heat.sort_values("NOTA_CORRIDA", ascending=False)
 
         z_vals = df_heat[colunas_nota].values.tolist()
         fig_heat = go.Figure(go.Heatmap(
@@ -776,7 +681,7 @@ if pagina == "🏠 Visão Geral":
                     unsafe_allow_html=True)
 
         df_display = df_presentes[[
-            "ORD", "POSTO_GRAD", "QUADRO", "NOME", "SEXO", "IDADE",
+            "ORD", "POSTO_GRAD", "QUADRO", "NOME",
             "NOTA_CORRIDA", "NOTA_ABDOMINAL", "NOTA_FLEXAO",
             "NOTA_NATACAO", "NOTA_BARRA", "MEDIA_FINAL",
             "CLASSIFICACAO", "PONTO_FRACO",
@@ -940,8 +845,8 @@ elif pagina == "🪖 Por Posto/Graduação":
         st.markdown('<p class="section-title">🕸️ Radar Comparativo por Posto</p>',
                     unsafe_allow_html=True)
 
-        postos_top = df_posto_media["POSTO_GRAD"].tolist() # Todos os postos
-        cores_radar = ["#ef4444", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7", "#ec4899", "#8b5cf6", "#10b981", "#f97316", "#6366f1", "#d946b1", "#06b6d4", "#f43f5e"]
+        postos_top = df_posto_media.head(6)["POSTO_GRAD"].tolist()
+        cores_radar = ["#ef4444", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7", "#ec4899"]
         fig_radar_posto = go.Figure()
         for idx, posto in enumerate(postos_top):
             vals = df_presentes[df_presentes["POSTO_GRAD"] == posto][colunas_nota].mean().tolist()
@@ -1151,10 +1056,10 @@ elif pagina == "👤 Ficha Individual":
         st.markdown("**🔎 Selecionar Militar**")
         busca = st.text_input("Buscar por nome", placeholder="Digite parte do nome...")
 
-        df_busca = df_all[df_all["PRESENTE"] & (df_all["TAF_ADAPTADO"] == False)].copy()
+        df_busca = df_all[df_all["PRESENTE"]].copy()
         lista_nomes = df_busca["NOME"].tolist()
         if busca:
-            lista_nomes = [n for n in lista_nomes if busca.upper() in n.upper()]
+            lista_nomes = [n for n in lista_nomes if busca.upper() in n]
 
         if lista_nomes:
             militar_sel = st.selectbox("Militar", lista_nomes)
@@ -1172,21 +1077,19 @@ elif pagina == "👤 Ficha Individual":
         class_ind = row["CLASSIFICACAO"]
         posto_ind = row["POSTO_GRAD"]
         quadro_ind = row["QUADRO"]
-        idade_ind = int(row["IDADE"])
-        sexo_ind = row["SEXO"]
 
         # Comparações
-        media_geral = df_all[df_all["PRESENTE"] & (df_all["TAF_ADAPTADO"] == False)]["MEDIA_FINAL"].mean()
+        media_geral = df_all[df_all["PRESENTE"]]["MEDIA_FINAL"].mean()
         diff_geral = media_ind - media_geral
 
         # Média do mesmo posto
         media_posto = df_all[
-            (df_all["PRESENTE"]) & (df_all["TAF_ADAPTADO"] == False) & (df_all["POSTO_GRAD"] == posto_ind)
+            (df_all["PRESENTE"]) & (df_all["POSTO_GRAD"] == posto_ind)
         ]["MEDIA_FINAL"].mean()
         diff_posto = media_ind - media_posto
 
         # Ranking
-        df_rank_calc = df_all[df_all["PRESENTE"] & (df_all["TAF_ADAPTADO"] == False) & df_all["MEDIA_FINAL"].notna()].copy()
+        df_rank_calc = df_all[df_all["PRESENTE"] & df_all["MEDIA_FINAL"].notna()].copy()
         rank_pos = df_rank_calc["MEDIA_FINAL"].rank(ascending=False, method="min")
         posicao = int(rank_pos[df_rank_calc["NOME"] == militar_sel].values[0])
         total = len(df_rank_calc)
@@ -1200,7 +1103,6 @@ elif pagina == "👤 Ficha Individual":
             "Bom":          ("#bfdbfe", "#1e3a5f", "rgba(59,130,246,.3)"),
             "Regular":      ("#fde68a", "#78350f", "rgba(245,158,11,.3)"),
             "Insuficiente": ("#fecaca", "#7f1d1d", "rgba(239,68,68,.3)"),
-            "Não Compareceu": ("#cbd5e1", "#334155", "rgba(100,116,139,.3)"),
         }.get(class_ind, ("#e7eefc", "#1e293b", "rgba(255,255,255,.1)"))
 
         sinal_g = "+" if diff_geral >= 0 else ""
@@ -1216,7 +1118,7 @@ elif pagina == "👤 Ficha Individual":
             <div>
               <div style="font-size:1.8rem;font-weight:800;">🪖 {nome_curto}</div>
               <div style="color:#94a3b8;margin-top:4px;">
-                {posto_ind} · {quadro_ind} · {sexo_ind} · {idade_ind} anos · CBMAM · 2026
+                {posto_ind} · {quadro_ind} · CBMAM · 2026
               </div>
             </div>
             <div style="display:flex;gap:12px;flex-wrap:wrap;">
@@ -1253,7 +1155,7 @@ elif pagina == "👤 Ficha Individual":
             ("🏃 Corrida 12min", row["CORRIDA_RAW"], "metros"),
             ("💪 Abdominal", row["ABDOMINAL_RAW"], "reps"),
             ("🤸 Flexão", row["FLEXAO_RAW"], "reps"),
-            ("🏊 Natação 50m", row["NATACAO_RAW"], "segundos"),
+            ("🏊 Natação 50m", row["NATACAO_RAW"], ""),
             ("🔩 Barra", row["BARRA_RAW"], f"({row['BARRA_TIPO']})" if pd.notna(row.get("BARRA_TIPO")) else ""),
         ]
         for i, (label, val, unit) in enumerate(raw_data):
@@ -1271,9 +1173,9 @@ elif pagina == "👤 Ficha Individual":
         # Radar e barras
         col_r, col_b2 = st.columns(2)
 
-        med_geral_vals = [df_all[df_all["PRESENTE"] & (df_all["TAF_ADAPTADO"] == False)][c].mean() for c in colunas_nota]
+        med_geral_vals = [df_all[df_all["PRESENTE"]][c].mean() for c in colunas_nota]
         med_posto_vals = [
-            df_all[(df_all["PRESENTE"]) & (df_all["TAF_ADAPTADO"] == False) & (df_all["POSTO_GRAD"] == posto_ind)][c].mean()
+            df_all[(df_all["PRESENTE"]) & (df_all["POSTO_GRAD"] == posto_ind)][c].mean()
             for c in colunas_nota
         ]
 
@@ -1348,7 +1250,7 @@ elif pagina == "👤 Ficha Individual":
         cols_disc = st.columns(5)
         for i, (label, col_n) in enumerate(zip(labels_nota, colunas_nota)):
             nota_v = float(row[col_n]) if pd.notna(row[col_n]) else 0.0
-            med_v = df_all[df_all["PRESENTE"] & (df_all["TAF_ADAPTADO"] == False)][col_n].mean()
+            med_v = df_all[df_all["PRESENTE"]][col_n].mean()
             delta_v = nota_v - med_v
             s = "+" if delta_v >= 0 else ""
             c_delta = "#22c55e" if delta_v >= 0 else "#ef4444"
@@ -1413,7 +1315,7 @@ elif pagina == "👤 Ficha Individual":
         st.markdown(f"""
         <div style="background:rgba(17,27,46,.8);border:1px solid rgba(255,255,255,.1);
                     border-radius:14px;padding:20px;margin-top:10px;line-height:2;">
-          <b>🪖 Posto/Graduação:</b> {posto_ind} · {quadro_ind} ({sexo_ind}, {idade_ind} anos)<br>
+          <b>🪖 Posto/Graduação:</b> {posto_ind} · {quadro_ind}<br>
           <b>🟢 Ponto forte:</b> {pf_forte} ({pf_notas.get(pf_forte, 0):.1f})<br>
           <b>🔴 Ponto fraco:</b> {pf_fraco} ({pf_notas.get(pf_fraco, 0):.1f})<br>
           <b>📍 Ranking:</b> {posicao}° de {total} avaliados<br>
@@ -1486,14 +1388,14 @@ elif pagina == "📈 Estatísticas":
         st.markdown('<p class="section-title">🏃 Correlação: Corrida × Média Final</p>',
                     unsafe_allow_html=True)
 
-        df_corr = df_presentes[df_presentes["NOTA_CORRIDA"].notna()].copy()
+        df_corr = df_presentes[df_presentes["CORRIDA"].notna()].copy()
         fig_scatter = px.scatter(
-            df_corr, x="NOTA_CORRIDA", y="MEDIA_FINAL",
+            df_corr, x="CORRIDA", y="MEDIA_FINAL",
             color="CLASSIFICACAO", color_discrete_map=COR_MAP,
             size="MEDIA_FINAL", hover_name="NOME",
             trendline="ols", trendline_color_override="#ffffff",
-            labels={"NOTA_CORRIDA": "Nota Corrida", "MEDIA_FINAL": "Média Final"},
-            title="Militares com maior nota na corrida tendem a ter média mais alta?",
+            labels={"CORRIDA": "Corrida 12min (metros)", "MEDIA_FINAL": "Média Final"},
+            title="Militares com maior distância na corrida têm média mais alta?",
         )
         fig_scatter.update_layout(
             **DARK, height=420,
@@ -1560,32 +1462,32 @@ elif pagina == "📈 Estatísticas":
             "Exercício": ["Corrida 12min (m)", "Abdominal (reps)", "Flexão (reps)",
                           "Natação 50m (seg)", "Barra (valor)"],
             "Média": [
-                df_presentes["CORRIDA_RAW"].mean(),
-                df_presentes["ABDOMINAL_RAW"].mean(),
-                df_presentes["FLEXAO_RAW"].mean(),
-                df_presentes["NATACAO_RAW"].mean(),
-                df_presentes["BARRA_RAW"].mean(),
+                df_presentes["CORRIDA"].mean(),
+                df_presentes["ABDOMINAL"].mean(),
+                df_presentes["FLEXAO"].mean(),
+                df_presentes["NATACAO_SEG"].mean(),
+                df_presentes["BARRA_VALOR"].mean(),
             ],
             "Mediana": [
-                df_presentes["CORRIDA_RAW"].median(),
-                df_presentes["ABDOMINAL_RAW"].median(),
-                df_presentes["FLEXAO_RAW"].median(),
-                df_presentes["NATACAO_RAW"].median(),
-                df_presentes["BARRA_RAW"].median(),
+                df_presentes["CORRIDA"].median(),
+                df_presentes["ABDOMINAL"].median(),
+                df_presentes["FLEXAO"].median(),
+                df_presentes["NATACAO_SEG"].median(),
+                df_presentes["BARRA_VALOR"].median(),
             ],
             "Mínimo": [
-                df_presentes["CORRIDA_RAW"].min(),
-                df_presentes["ABDOMINAL_RAW"].min(),
-                df_presentes["FLEXAO_RAW"].min(),
-                df_presentes["NATACAO_RAW"].min(),
-                df_presentes["BARRA_RAW"].min(),
+                df_presentes["CORRIDA"].min(),
+                df_presentes["ABDOMINAL"].min(),
+                df_presentes["FLEXAO"].min(),
+                df_presentes["NATACAO_SEG"].min(),
+                df_presentes["BARRA_VALOR"].min(),
             ],
             "Máximo": [
-                df_presentes["CORRIDA_RAW"].max(),
-                df_presentes["ABDOMINAL_RAW"].max(),
-                df_presentes["FLEXAO_RAW"].max(),
-                df_presentes["NATACAO_RAW"].max(),
-                df_presentes["BARRA_RAW"].max(),
+                df_presentes["CORRIDA"].max(),
+                df_presentes["ABDOMINAL"].max(),
+                df_presentes["FLEXAO"].max(),
+                df_presentes["NATACAO_SEG"].max(),
+                df_presentes["BARRA_VALOR"].max(),
             ],
         }).round(1)
         st.dataframe(raw_stats, use_container_width=True, hide_index=True)
@@ -1665,15 +1567,11 @@ elif pagina == "♿ TAF Adaptado":
                             "FLUTUACAO", "SUPINO", "COOPER"]
         ex_count = {}
         for ex in exercicios_adapt:
-            # Verifica se a coluna existe no DataFrame antes de tentar acessá-la
             if ex in df_adaptado.columns:
                 count = df_adaptado[ex].dropna().apply(
                     lambda x: str(x).strip() not in ("", "nan", "NÃO COMPARECEU", "NÃO")
                 ).sum()
                 ex_count[ex] = count
-            else:
-                # Se a coluna não existe, pode-se adicionar com 0 ou ignorar
-                ex_count[ex] = 0 # Adiciona com 0 se a coluna não existir
 
         ex_df = pd.DataFrame({
             "Exercício": list(ex_count.keys()),
