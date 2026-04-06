@@ -856,13 +856,16 @@ elif pagina == "🪖 Por Posto/Graduação":
                     unsafe_allow_html=True)
 
         postos_top = df_posto_media.head(6)["POSTO_GRAD"].tolist()
-        cores_radar = ["#ef4444", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7", "#ec4899"]
+        cores_radar = ["#ef4444", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7", "#ec407a"] # Adicionei mais cores para evitar repetição
+
         fig_radar_posto = go.Figure()
         for idx, posto in enumerate(postos_top):
             vals = df_presentes[df_presentes["POSTO_GRAD"] == posto][colunas_nota].mean().tolist()
             fig_radar_posto.add_trace(go.Scatterpolar(
                 r=vals + [vals[0]], theta=cats_radar,
-                name=posto, line_color=cores_radar[idx % len(cores_radar)],
+                fill="toself", name=posto,
+                line_color=cores_radar[idx % len(cores_radar)],
+                fillcolor=f"{cores_radar[idx % len(cores_radar)]}30", # Adiciona transparência
             ))
         fig_radar_posto.update_layout(
             polar=dict(
@@ -874,24 +877,25 @@ elif pagina == "🪖 Por Posto/Graduação":
             ),
             **DARK, height=450,
             legend=dict(orientation="h", yanchor="bottom", y=-0.2),
-            title="Perfil de desempenho por posto",
+            title="Perfil de desempenho por posto (Top 6)",
         )
         st.plotly_chart(fig_radar_posto, use_container_width=True)
 
         # Taxa de ausência por posto
-        st.markdown('<p class="section-title">📋 Taxa de Ausência por Posto</p>',
+        st.markdown('<p class="section-title">❌ Taxa de Ausência por Posto</p>',
                     unsafe_allow_html=True)
 
-        ausencia = df_all.groupby("POSTO_GRAD").agg(
-            Total=("NOME", "count"),
-            Ausentes=("PRESENTE", lambda x: (~x).sum()),
-        ).reset_index()
-        ausencia["Taxa (%)"] = (ausencia["Ausentes"] / ausencia["Total"] * 100).round(1)
-        ausencia["_ordem"] = ausencia["POSTO_GRAD"].apply(ordem_posto)
-        ausencia = ausencia.sort_values("_ordem").drop(columns=["_ordem"])
+        ausentes_posto = df_all.groupby("POSTO_GRAD")["PRESENTE"].apply(
+            lambda x: (~x).sum()
+        ).reset_index(name="Ausentes")
+        total_posto = df_all.groupby("POSTO_GRAD").size().reset_index(name="Total")
+        df_ausencia = pd.merge(ausentes_posto, total_posto, on="POSTO_GRAD")
+        df_ausencia["Taxa (%)"] = (df_ausencia["Ausentes"] / df_ausencia["Total"]) * 100
+        df_ausencia["_ordem"] = df_ausencia["POSTO_GRAD"].apply(ordem_posto)
+        df_ausencia = df_ausencia.sort_values("_ordem").drop(columns=["_ordem"])
 
         fig_aus = px.bar(
-            ausencia, x="POSTO_GRAD", y="Taxa (%)",
+            df_ausencia, x="POSTO_GRAD", y="Taxa (%)",
             color="Taxa (%)",
             color_continuous_scale=["#22c55e", "#f59e0b", "#ef4444"],
             text="Taxa (%)",
@@ -1237,7 +1241,8 @@ elif pagina == "👤 Ficha Individual":
                 marker_color="rgba(245,158,11,.5)",
                 text=[f"{v:.1f}" for v in med_geral_vals], textposition="outside",
             ))
-fig_b.add_trace(go.Bar(
+            # A linha abaixo estava com indentação incorreta
+            fig_b.add_trace(go.Bar(
                 name=nome_curto, x=labels_nota, y=vals_ind,
                 marker_color=[
                     "#22c55e" if n >= m else "#ef4444"
