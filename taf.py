@@ -1,3 +1,13 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+import re
+from pathlib import Path
+from urllib.parse import unquote
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # IMAGEM CBMAM (extraída de cbmam.html)
 # ══════════════════════════════════════════════════════════════════════════════
@@ -8,7 +18,7 @@ def _get_cbmam_image_url() -> str:
     if html_path.exists():
         try:
             content = html_path.read_text(encoding="utf-8", errors="ignore")
-            for m in re.findall(r'mediaurl=([^&"\\]+)', content):
+            for m in re.findall(r'mediaurl=([^&"\$|+)', content):
                 url = unquote(m)
                 if re.search(r'\.(png|jpe?g|svg|webp)$', url, re.I):
                     return url
@@ -1227,7 +1237,7 @@ elif pagina == "👤 Ficha Individual":
                 marker_color="rgba(245,158,11,.5)",
                 text=[f"{v:.1f}" for v in med_geral_vals], textposition="outside",
             ))
-            fig_b.add_trace(go.Bar(
+fig_b.add_trace(go.Bar(
                 name=nome_curto, x=labels_nota, y=vals_ind,
                 marker_color=[
                     "#22c55e" if n >= m else "#ef4444"
