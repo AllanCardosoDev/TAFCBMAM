@@ -12,29 +12,6 @@ from datetime import datetime
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# IMAGEM CBMAM (extraída de cbmam.html)
-# ══════════════════════════════════════════════════════════════════════════════
-@st.cache_data
-def _get_cbmam_image_url() -> str:
-    """Extrai a URL da primeira imagem CBMAM encontrada em cbmam.html."""
-    html_path = Path("cbmam.html")
-    if html_path.exists():
-        try:
-            content = html_path.read_text(encoding="utf-8", errors="ignore")
-            for m in re.findall(r'mediaurl=([^&"\$|+)', content):
-                url = unquote(m)
-                if re.search(r'\.(png|jpe?g|svg|webp)$', url, re.I):
-                    return url
-        except Exception:
-            pass
-    return (
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/"
-        "Bras%C3%A3o_do_Corpo_de_Bombeiros_Militar_do_Amazonas.svg/"
-        "200px-Bras%C3%A3o_do_Corpo_de_Bombeiros_Militar_do_Amazonas.svg.png"
-    )
-
-
-# ══════════════════════════════════════════════════════════════════════════════
 # CONFIGURAÇÃO
 # ══════════════════════════════════════════════════════════════════════════════
 st.set_page_config(
@@ -48,7 +25,9 @@ st.markdown("""
 <style>
   [data-testid="stAppViewContainer"] {
     background: linear-gradient(135deg, #0b1220 0%, #0f172a 100%);
-    color: #e7eefc;
+  }
+  body, p, span, div, label, h1, h2, h3, h4, h5, h6 {
+    color: #ffffff !important;
   }
   [data-testid="stSidebar"] {
     background: #111b2e;
@@ -60,16 +39,32 @@ st.markdown("""
     border-radius: 14px;
     padding: 18px 20px;
   }
+  [data-testid="metric-container"] p {
+    color: #ffffff !important;
+  }
   .section-title {
     font-size: 1.15rem;
     font-weight: 700;
     letter-spacing: .5px;
-    color: #ef4444;
+    color: #ef4444 !important;
     margin: 28px 0 8px;
     border-left: 4px solid #ef4444;
     padding-left: 10px;
   }
   footer { visibility: hidden; }
+  [role="heading"] {
+    color: #ffffff !important;
+  }
+  .dataframe {
+    color: #ffffff !important;
+  }
+  .dataframe th {
+    background-color: rgba(255,255,255,.10);
+    color: #ffffff !important;
+  }
+  .dataframe td {
+    color: #ffffff !important;
+  }
 </style>
 """, unsafe_allow_html=True)
 
@@ -593,7 +588,6 @@ cats_radar = labels_nota + [labels_nota[0]]
 # SIDEBAR
 # ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
-    st.image(_get_cbmam_image_url(), width=80)
     st.markdown("## CBMAM · TAF 2026")
     st.markdown("**Análise de Desempenho Físico**")
     st.divider()
@@ -664,22 +658,17 @@ df_presentes = df_f[df_f["PRESENTE"] & df_f["MEDIA_FINAL"].notna()]
 # ══════════════════════════════════════════════════════════════════════════════
 if pagina == "🏠 Visão Geral":
 
-    col_txt, col_img = st.columns([2.2, 1])
-    with col_txt:
-        st.markdown("""
-        <h1 style="margin:0;font-size:2rem;">🔥 Dashboard TAF · CBMAM</h1>
-        <p style="margin:6px 0 12px;color:#94a3b8;">
-          Corpo de Bombeiros Militar do Amazonas · Avaliação Física 2026
-        </p>
-        """, unsafe_allow_html=True)
-        st.markdown("""
-        > **Análise completa do Teste de Aptidão Física** com dados de desempenho
-        > em corrida, abdominal, flexão, natação e barra. Filtre por posto/graduação
-        > e quadro para uma visão detalhada.
-        """)
-
-    with col_img:
-        st.image(_get_cbmam_image_url(), caption="CBMAM · 2026", use_column_width=True)
+    st.markdown("""
+    <h1 style="margin:0;font-size:2rem;color:#ffffff;">🔥 Dashboard TAF · CBMAM</h1>
+    <p style="margin:6px 0 12px;color:#ffffff;">
+      Corpo de Bombeiros Militar do Amazonas · Avaliação Física 2026
+    </p>
+    """, unsafe_allow_html=True)
+    st.markdown("""
+    > **Análise completa do Teste de Aptidão Física** com dados de desempenho
+    > em corrida, abdominal, flexão, natação e barra. Filtre por posto/graduação
+    > e quadro para uma visão detalhada.
+    """)
 
     st.divider()
 
