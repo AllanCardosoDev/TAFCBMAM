@@ -60,6 +60,90 @@ st.markdown("""
     background: #111b2e;
     border-right: 1px solid rgba(255,255,255,.08);
   }
+  
+  /* Inputs e campos de texto */
+  input, 
+  input[type="text"],
+  input[type="search"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  input[type="date"],
+  textarea,
+  select {
+    color: #ffffff !important;
+    background-color: rgba(50,80,120,.6) !important;
+    border: 1px solid rgba(255,255,255,.3) !important;
+    border-radius: 6px !important;
+  }
+  
+  input::placeholder {
+    color: #ffffff !important;
+    opacity: 0.8 !important;
+  }
+  
+  input::-webkit-input-placeholder {
+    color: #ffffff !important;
+  }
+  
+  input:-moz-placeholder {
+    color: #ffffff !important;
+  }
+  
+  input::-moz-placeholder {
+    color: #ffffff !important;
+  }
+  
+  input:-ms-input-placeholder {
+    color: #ffffff !important;
+  }
+  
+  /* Selectbox específico do Streamlit */
+  .stSelectbox > div > div > input,
+  [data-testid="stSelectbox"] input {
+    color: #ffffff !important;
+    background-color: rgba(50,80,120,.6) !important;
+  }
+  
+  [data-testid="stSelectbox"] input::placeholder {
+    color: #ffffff !important;
+  }
+  
+  /* Dropdown options */
+  div[role="listbox"] {
+    background-color: rgba(30,50,90,.95) !important;
+  }
+  
+  div[role="option"] {
+    color: #ffffff !important;
+    background-color: rgba(50,80,120,.6) !important;
+  }
+  
+  div[role="option"]:hover,
+  div[role="option"][aria-selected="true"] {
+    background-color: rgba(80,120,180,.8) !important;
+    color: #ffffff !important;
+  }
+  
+  /* MultiSelect */
+  [data-testid="stMultiSelect"] input {
+    color: #ffffff !important;
+  }
+  
+  [data-testid="stMultiSelect"] input::placeholder {
+    color: #ffffff !important;
+  }
+  
+  /* Text Input */
+  [data-testid="stTextInput"] input {
+    color: #ffffff !important;
+    background-color: rgba(50,80,120,.6) !important;
+  }
+  
+  [data-testid="stTextInput"] input::placeholder {
+    color: #ffffff !important;
+  }
+  
   [data-testid="stMetricValue"] {
     color: #ffffff !important;
   }
@@ -103,13 +187,9 @@ st.markdown("""
   }
   .stSelectbox label,
   .stMultiSelect label,
-  .stSlider label {
+  .stSlider label,
+  .stTextInput label {
     color: #ffffff !important;
-  }
-  input, select, textarea {
-    color: #ffffff !important;
-    background-color: rgba(17,27,46,.8) !important;
-    border-color: rgba(255,255,255,.2) !important;
   }
   button {
     color: #ffffff !important;
