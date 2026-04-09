@@ -115,60 +115,8 @@ st.markdown("""
   .stSelectbox > div > div > input,
   [data-testid="stSelectbox"] input {
     color: #ffffff !important;
-    background-color: rgba(30,70,130,.8) !important;
-    border: 2px solid rgba(59,130,246,.6) !important;
-    padding: 10px 12px !important;
-    border-radius: 8px !important;
+    background-color: rgba(50,80,120,.6) !important;
   }
-  
-  .stSelectbox > div > div > input:focus {
-    outline: none !important;
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 3px rgba(59,130,246,.2) !important;
-  }
-  
-  /* Melhoria para selectbox dropdown */
-  div[data-baseweb="select"] {
-    background-color: rgba(17,27,46,.98) !important;
-    border: 2px solid rgba(59,130,246,.5) !important;
-    border-radius: 8px !important;
-  }
-  
-  /* Opções do dropdown */
-  div[data-baseweb="menu"] {
-    background-color: rgba(17,27,46,.98) !important;
-  }
-  
-  div[data-baseweb="menu"] > div {
-    background-color: rgba(17,27,46,.98) !important;
-  }
-  
-  li[data-baseweb="option"] {
-    color: #ffffff !important;
-    background-color: rgba(50,80,120,.4) !important;
-    padding: 12px 16px !important;
-  }
-  
-  li[data-baseweb="option"]:hover {
-    background-color: rgba(59,130,246,.5) !important;
-    color: #ffffff !important;
-  }
-  
-  div[data-baseweb="popover"] {
-    background-color: rgba(17,27,46,.98) !important;
-  }
-  
-  /* Opções do dropdown */
-  li[data-testid] {
-    color: #ffffff !important;
-    background-color: rgba(50,80,120,.5) !important;
-  }
-  
-  /* Hover no dropdown */
-  li[data-testid]:hover {
-    background-color: rgba(59,130,246,.6) !important;
-  }
-  
   button {
     color: #ffffff !important;
   }
@@ -468,51 +416,7 @@ def carregar_dados():
                     df['CORRIDA'] = pd.to_numeric(df.get('CORRIDA', np.nan), errors='coerce')
                     df['FLEXAO'] = pd.to_numeric(df.get('FLEXAO', np.nan), errors='coerce')
                     df['ABDOMINAL'] = pd.to_numeric(df.get('ABDOMINAL', np.nan), errors='coerce')
-                    
-                    # Limpar NATACAO_SEG (converter "01'04" para 64 segundos, etc)
-                    if 'NATACAO_SEG' in df.columns:
-                        def converter_tempo_para_segundos(val):
-                            """Converte formato 'MM'SS' ou MM:SS ou apenas números para segundos"""
-                            if pd.isna(val) or val == '':
-                                return np.nan
-                            s = str(val).strip()
-                            if not s or s.upper() in ('NÃO', 'NAN'):
-                                return np.nan
-                            
-                            # Remove aspas
-                            s = s.replace('"', '').replace("'", '')
-                            
-                            # Trata formato "01 04" (minutos e segundos separados)
-                            partes = s.split()
-                            if len(partes) >= 2:
-                                try:
-                                    # Tenta se é "01 04" ou "01'04" (tem 1 min e 4 seg)
-                                    minutos = int(partes[0])
-                                    segundos = int(partes[1])
-                                    return minutos * 60 + segundos
-                                except:
-                                    pass
-                            
-                            # Se tem dois dígitos separados por espaço após limpar
-                            # Exemplo: "0104" pode ser "01 04" = 1 min 4 seg
-                            if len(s) == 4 and s.isdigit():
-                                try:
-                                    minutos = int(s[:2])
-                                    segundos = int(s[2:])
-                                    if minutos < 60 and segundos < 60:  # Validar
-                                        return minutos * 60 + segundos
-                                except:
-                                    pass
-                            
-                            # Se é um único número, já é segundos
-                            try:
-                                resultado = float(s)
-                                return resultado
-                            except:
-                                return np.nan
-                        
-                        df['NATACAO_SEG'] = df['NATACAO_SEG'].apply(converter_tempo_para_segundos)
-                    
+                    df['NATACAO_SEG'] = pd.to_numeric(df.get('NATACAO_SEG', np.nan), errors='coerce')
                     df['BARRA_VALOR'] = pd.to_numeric(df.get('BARRA_VALOR', np.nan), errors='coerce')
                     df['IDADE'] = pd.to_numeric(df.get('IDADE', np.nan), errors='coerce')
                     df['SEXO'] = df['SEXO'].fillna('M') if 'SEXO' in df.columns else 'M'
@@ -566,7 +470,7 @@ def carregar_dados():
                         
                         # Filtrar colunas
                         cols_de_interesse = ["ORD", "POSTO/GRAD", "QUADRO", "NOME (ORDEM ALFABÉTICA)", 
-                                            "CORRIDA", "ABDOMINAL", "FLEXÃO", "NATAÇÃO", "BARRA"]
+                                             "CORRIDA", "ABDOMINAL", "FLEXÃO", "NATAÇÃO", "BARRA"]
                         # Adaptar nomes se diferentes
                         nome_col = None
                         for col in df_temp.columns:
@@ -667,8 +571,8 @@ def carregar_dados():
         df = pd.concat(sections, ignore_index=True)
         df = df.iloc[:, :9]
         df.columns = ["ORD", "POSTO_GRAD", "QUADRO", "NOME",
-                    "CORRIDA_RAW", "ABDOMINAL_RAW", "FLEXAO_RAW",
-                    "NATACAO_RAW", "BARRA_RAW"]
+                      "CORRIDA_RAW", "ABDOMINAL_RAW", "FLEXAO_RAW",
+                      "NATACAO_RAW", "BARRA_RAW"]
 
         # Limpar strings
         df["NOME"] = df["NOME"].astype(str).str.strip().str.upper()
@@ -835,12 +739,7 @@ def carregar_dados():
     df["NOTA_ABDOMINAL"] = df.apply(lambda row: obter_nota_por_regra("Abdominal", row.get("ABDOMINAL"), row["IDADE"], row["SEXO"]) if pd.notna(row.get("ABDOMINAL")) else np.nan, axis=1)
     df["NOTA_FLEXAO"] = df.apply(lambda row: obter_nota_por_regra("Flexão", row.get("FLEXAO"), row["IDADE"], row["SEXO"]) if pd.notna(row.get("FLEXAO")) else np.nan, axis=1)
     df["NOTA_NATACAO"] = df.apply(lambda row: obter_nota_por_regra("Natação", row.get("NATACAO_SEG"), row["IDADE"], row["SEXO"]) if pd.notna(row.get("NATACAO_SEG")) else np.nan, axis=1)
-    
-    # Para barra: Masculino = Barra Dinâmica (repetições), Feminino = Barra Estática (segundos)
-    def obter_tipo_barra(sexo):
-        return "Barra Estática" if str(sexo).upper().strip() in ["F", "FEMININO"] else "Barra Dinâmica"
-    
-    df["NOTA_BARRA"] = df.apply(lambda row: obter_nota_por_regra(obter_tipo_barra(row["SEXO"]), row.get("BARRA_VALOR"), row["IDADE"], row["SEXO"]) if pd.notna(row.get("BARRA_VALOR")) else np.nan, axis=1)
+    df["NOTA_BARRA"] = df.apply(lambda row: obter_nota_por_regra("Barra Dinâmica", row.get("BARRA_VALOR"), row["IDADE"], row["SEXO"]) if pd.notna(row.get("BARRA_VALOR")) else np.nan, axis=1)
 
     # Média final
     nota_cols = ["NOTA_CORRIDA", "NOTA_ABDOMINAL", "NOTA_FLEXAO", "NOTA_NATACAO", "NOTA_BARRA"]
@@ -956,12 +855,12 @@ with st.sidebar:
         "📌 Navegação",
         [
             "🏠 Visão Geral",
+            "👥 Por Faixa Etária",
             "🪖 Por Posto/Graduação",
             "📋 Por Quadro",
             "👤 Ficha Individual",
             "📈 Estatísticas",
             "♿ TAF Adaptado",
-            "📊 Regras de Pontuação",
         ],
         label_visibility="collapsed",
     )
@@ -969,7 +868,7 @@ with st.sidebar:
     st.divider()
 
     # Filtros globais
-    if pagina not in ["👤 Ficha Individual", "♿ TAF Adaptado", "� Regras de Pontuação"]:
+    if pagina not in ["👤 Ficha Individual", "♿ TAF Adaptado", "👥 Por Faixa Etária"]:
         st.markdown("**🔧 Filtros**")
 
         postos_disponiveis = sorted(
@@ -977,7 +876,7 @@ with st.sidebar:
             key=lambda x: ordem_posto(x),
         )
         filtro_posto = st.multiselect("Posto/Graduação", postos_disponiveis,
-                                    default=postos_disponiveis)
+                                       default=postos_disponiveis)
 
         quadros_disponiveis = sorted(df_all[df_all["PRESENTE"]]["QUADRO"].unique().tolist())
         filtro_quadro = st.multiselect("Quadro", quadros_disponiveis,
@@ -1026,7 +925,7 @@ if pagina == "🏠 Visão Geral":
         st.markdown("""
         <h1 style="margin:0;font-size:2rem;color:#ffffff;">🔥 Dashboard TAF · CBMAM</h1>
         <p style="margin:6px 0 12px;color:#ffffff;">
-        Corpo de Bombeiros Militar do Amazonas · Avaliação Física 2026
+          Corpo de Bombeiros Militar do Amazonas · Avaliação Física 2026
         </p>
         """, unsafe_allow_html=True)
         st.markdown("""
@@ -1054,9 +953,9 @@ if pagina == "🏠 Visão Geral":
         k1.metric("👥 Presentes", len(df_presentes))
         k2.metric("📈 Média Geral", f"{media_geral:.2f}")
         k3.metric("🥇 Maior Média", f"{melhor['MEDIA_FINAL']:.1f}",
-                melhor["NOME"].split()[0])
+                   melhor["NOME"].split()[0])
         k4.metric("⚠️ Menor Média", f"{pior['MEDIA_FINAL']:.1f}",
-                pior["NOME"].split()[0])
+                   pior["NOME"].split()[0])
         k5.metric("✅ Excelentes", n_excelentes)
         k6.metric("🚨 Insuficientes / Ausentes", f"{n_insuficientes} / {n_ausentes}")
 
@@ -1076,7 +975,7 @@ if pagina == "🏠 Visão Geral":
             color="CLASSIFICACAO", color_discrete_map=COR_MAP,
             text="MEDIA_FINAL",
             hover_data={"NOME": True, "MEDIA_FINAL": True, "CLASSIFICACAO": True,
-                    "POSTO_GRAD": True, "QUADRO": True},
+                       "POSTO_GRAD": True, "QUADRO": True},
             labels={"MEDIA_FINAL": "Média Final", "LABEL": ""},
         )
         fig_rank.update_traces(texttemplate="%{text:.1f}", textposition="outside")
@@ -1148,7 +1047,7 @@ if pagina == "🏠 Visão Geral":
             title="Nota média por exercício",
         )
         fig_disc.update_traces(texttemplate="%{text:.2f}", textposition="outside",
-                            showlegend=False)
+                               showlegend=False)
         fig_disc.update_layout(
             **DARK, height=320,
             xaxis=dict(range=[0, 11], **GRID),
@@ -1214,7 +1113,7 @@ if pagina == "🏠 Visão Geral":
             texttemplate="%{text}",
             hovertemplate="<b>%{y}</b><br>%{x}: %{z:.1f}<extra></extra>",
             colorbar=dict(title="Nota", tickfont_color="#e7eefc",
-                        title_font_color="#e7eefc"),
+                         title_font_color="#e7eefc"),
         ))
         fig_heat.update_layout(
             **DARK, height=max(500, len(df_heat) * 20),
@@ -1366,73 +1265,194 @@ if pagina == "🏠 Visão Geral":
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# PÁGINA: REGRAS DE PONTUAÇÃO
+# PÁGINA: ANÁLISE POR FAIXA ETÁRIA (AMESTRIA)
 # ══════════════════════════════════════════════════════════════════════════════
-elif pagina == "📊 Regras de Pontuação":
+elif pagina == "👥 Por Faixa Etária":
     st.markdown("""
-    <h1 style="margin:0;font-size:2rem;">📊 Regras de Pontuação TAF</h1>
+    <h1 style="margin:0;font-size:2rem;">👥 Análise por Faixa Etária</h1>
     <p style="margin:6px 0 12px;color:#94a3b8;">
-    Tabelas de limites e pontuação por exercício, idade e sexo
+      Desempenho e comparação dos militares estratificados por grupos etários
     </p>
     """, unsafe_allow_html=True)
     st.divider()
+
+    # Preparar dados de faixas etárias
+    faixas_order = ['18-21', '22-25', '26-29', '30-34', '35-39', '40-44', '45-49', '50-53', '54-57', '58+']
+    df_faixas = df_f[df_f["PRESENTE"] & df_f["FAIXA_ETARIA"].notna()].copy()
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
+    if len(df_faixas) == 0:
+        st.warning("Nenhum dado disponível para análise por faixa etária com os filtros atuais.")
+    else:
+        # KPIs por faixa
+        st.markdown('<p class="section-title">📊 Indicadores por Faixa Etária</p>',
+                    unsafe_allow_html=True)
+        
+        faixa_stats = df_faixas.groupby("FAIXA_ETARIA").agg({
+            "NOME": "count",
+            "MEDIA_FINAL": ["mean", "std", "min", "max"]
+        }).round(2)
+        faixa_stats.columns = ["Efetivo", "Média", "Desvio Padrão", "Mínima", "Máxima"]
+        faixa_stats = faixa_stats.reindex([f for f in faixas_order if f in faixa_stats.index])
+        
+        st.dataframe(faixa_stats, use_container_width=True)
+        
+        st.divider()
+        
+        # Distribuição de militares por faixa
+        st.markdown('<p class="section-title">👥 Distribuição de Efetivo por Faixa Etária</p>',
+                    unsafe_allow_html=True)
+        
+        col_a, col_b = st.columns(2)
+        
+        with col_a:
+            faixa_count = df_faixas["FAIXA_ETARIA"].value_counts().reindex(faixas_order, fill_value=0)
+            fig_count = px.bar(
+                x=faixa_count.index, y=faixa_count.values,
+                labels={"x": "Faixa Etária", "y": "Quantidade"},
+                title="Número de militares por faixa",
+                color_discrete_sequence=["#3b82f6"]
+            )
+            fig_count.update_layout(**DARK, height=350, xaxis=dict(**GRID), yaxis=dict(**GRID))
+            st.plotly_chart(fig_count, use_column_width=True)
+        
+        with col_b:
+            faixa_dist = (faixa_count / faixa_count.sum() * 100).round(1)
+            fig_pie = px.pie(
+                values=faixa_count.values, names=faixa_count.index,
+                title="Proporção de efetivo (%)",
+                hole=0.5
+            )
+            fig_pie.update_layout(**DARK, height=350)
+            st.plotly_chart(fig_pie, use_column_width=True)
+        
+        st.divider()
+        
+        # Desempenho médio por faixa e exercício
+        st.markdown('<p class="section-title">💪 Desempenho Médio por Exercício e Faixa Etária</p>',
+                    unsafe_allow_html=True)
+        
+        # Preparar dados para heatmap
+        exercicios_labels = ["Corrida 12min", "Abdominal", "Flexão", "Natação 50m", "Barra"]
+        exercicios_cols = ["NOTA_CORRIDA", "NOTA_ABDOMINAL", "NOTA_FLEXAO", "NOTA_NATACAO", "NOTA_BARRA"]
+        
+        heatmap_data = []
+        for faixa in faixas_order:
+            faixa_data = df_faixas[df_faixas["FAIXA_ETARIA"] == faixa]
+            if len(faixa_data) > 0:
+                row = [faixa_data[col].mean() for col in exercicios_cols]
+                heatmap_data.append(row)
+            else:
+                heatmap_data.append([np.nan] * len(exercicios_cols))
+        
+        fig_heat = go.Figure(data=go.Heatmap(
+            z=heatmap_data,
+            x=exercicios_labels,
+            y=[f for f in faixas_order if any(~np.isnan(h) for h in heatmap_data[faixas_order.index(f)])],
+            colorscale="RdYlGn",
+            text=np.array(heatmap_data).round(1),
+            texttemplate="%{text:.1f}",
+            textfont={"size": 10},
+            colorbar=dict(title="Nota Média")
+        ))
+        fig_heat.update_layout(**DARK, height=400, title="Mapa de calor: Notas médias por exercício e faixa etária")
+        st.plotly_chart(fig_heat, use_column_width=True)
+        
+        st.divider()
+        
+        # Ranking por faixa etária
+        st.markdown('<p class="section-title">🏆 Top 10 por Faixa Etária</p>',
+                    unsafe_allow_html=True)
+        
         faixa_selecionada = st.selectbox(
             "Selecione a faixa etária:",
-            ['18-21', '22-25', '26-29', '30-34', '35-39', '40-44', '45-49', '50-53', '54-57', '58+'],
-            key="faixa_regras"
+            [f for f in faixas_order if f in df_faixas["FAIXA_ETARIA"].unique()],
+            key="faixa_top10"
         )
-    
-    with col2:
-        sexo = st.radio(
-            "Sexo:",
-            ["Masculino", "Feminino"],
-            horizontal=True,
-            key="sexo_regras"
+        
+        df_faixa_sel = df_faixas[df_faixas["FAIXA_ETARIA"] == faixa_selecionada].sort_values("MEDIA_FINAL", ascending=False).head(10)
+        
+        if len(df_faixa_sel) > 0:
+            df_top_display = df_faixa_sel[[
+                "NOME", "POSTO_GRAD", "IDADE", "SEXO", "QUADRO",
+                "NOTA_CORRIDA", "NOTA_ABDOMINAL", "NOTA_FLEXAO", "NOTA_NATACAO", "NOTA_BARRA",
+                "MEDIA_FINAL", "CLASSIFICACAO"
+            ]].copy()
+            df_top_display.columns = [
+                "Nome", "Posto", "Idade", "Sexo", "Quadro",
+                "Corrida", "Abdominal", "Flexão", "Natação", "Barra",
+                "Média", "Classificação"
+            ]
+            df_top_display = df_top_display.fillna("—").round(1)
+            st.dataframe(df_top_display, use_container_width=True)
+        else:
+            st.info(f"Nenhum militar encontrado na faixa {faixa_selecionada}.")
+        
+        st.divider()
+        
+        # Box plot de desempenho por faixa
+        st.markdown('<p class="section-title">📊 Distribuição de Médias por Faixa Etária</p>',
+                    unsafe_allow_html=True)
+        
+        fig_box = px.box(
+            df_faixas,
+            x="FAIXA_ETARIA",
+            y="MEDIA_FINAL",
+            category_orders={"FAIXA_ETARIA": faixas_order},
+            color="FAIXA_ETARIA",
+            labels={"FAIXA_ETARIA": "Faixa Etária", "MEDIA_FINAL": "Média Final"},
+            title="Distribuição de notas por faixa etária",
+            points="outliers"
         )
-    
-    st.divider()
-    
-    # Selecionar as regras apropriadas
-    regras = REGRAS_MASCULINO if sexo == "Masculino" else REGRAS_FEMININO
-    regras_faixa = regras.get(faixa_selecionada, {})
-    
-    if not regras_faixa:
-        st.warning(f"Nenhuma regra encontrada para {sexo} - Faixa {faixa_selecionada}")
-    else:
-        st.markdown(f"### 💪 Limites de Pontuação - {sexo} ({faixa_selecionada})")
+        fig_box.update_layout(**DARK, height=400, xaxis=dict(**GRID), yaxis=dict(**GRID),
+                              showlegend=False)
+        st.plotly_chart(fig_box, use_column_width=True)
         
-        exercicios_display = {
-            "Corrida 12min": ("Corrida", "segundos"),
-            "Flexão": ("Flexão", "repetições"),
-            "Abdominal": ("Abdominal", "repetições"),
-            "Natação 50m": ("Natação", "segundos"),
-            "Barra Dinâmica": ("Barra Dinâmica", "repetições"),
-            "Barra Estática": ("Barra Estática", "segundos pendurados" if sexo == "Feminino" else "segundos")
-        }
+        st.divider()
         
-        cols = st.columns(2)
-        col_idx = 0
+        # Comparação por sexo dentro das faixas
+        st.markdown('<p class="section-title">⚖️ Desempenho por Sexo em Cada Faixa Etária</p>',
+                    unsafe_allow_html=True)
         
-        for nome_exibicao, (nome_chave, unidade) in exercicios_display.items():
-            if nome_chave in regras_faixa:
-                limites = regras_faixa[nome_chave]
-                
-                # Converter limites dict para dataframe
-                df_limites = pd.DataFrame([
-                    {"Limite Mínimo": minimo, "Pontuação": pontos}
-                    for minimo, pontos in sorted(limites.items(), key=lambda x: x[1], reverse=True)
-                ])
-                
-                with cols[col_idx % 2]:
-                    st.markdown(f"**{nome_exibicao}** ({unidade})")
-                    st.dataframe(df_limites, hide_index=True, use_container_width=True)
-                    st.caption(f"⬆️ Acima do limite = {unidade.capitalize()} máxima")
-                
-                col_idx += 1
+        sexo_faixa = df_faixas.groupby(["FAIXA_ETARIA", "SEXO"]).agg({
+            "MEDIA_FINAL": "mean",
+            "NOME": "count"
+        }).round(2)
+        sexo_faixa.columns = ["Média Final", "Efetivo"]
+        sexo_faixa = sexo_faixa.reset_index()
+        sexo_faixa["SEXO"] = sexo_faixa["SEXO"].map({"M": "Masculino", "F": "Feminino"})
+        
+        fig_sexo = px.bar(
+            sexo_faixa,
+            x="FAIXA_ETARIA",
+            y="Média Final",
+            color="SEXO",
+            barmode="group",
+            category_orders={"FAIXA_ETARIA": faixas_order},
+            color_discrete_map={"Masculino": "#3b82f6", "Feminino": "#ec4899"},
+            title="Comparação de desempenho por sexo em cada faixa etária",
+            labels={"FAIXA_ETARIA": "Faixa Etária", "Média Final": "Nota Média"}
+        )
+        fig_sexo.update_layout(**DARK, height=400, xaxis=dict(**GRID), yaxis=dict(**GRID))
+        st.plotly_chart(fig_sexo, use_column_width=True)
+        
+        st.divider()
+        
+        # Insights
+        st.markdown('<p class="section-title">📝 Insights</p>', unsafe_allow_html=True)
+        
+        faixa_melhor = faixa_stats["Média"].idxmax()
+        media_melhor = faixa_stats["Média"].max()
+        faixa_pior = faixa_stats["Média"].idxmin()
+        media_pior = faixa_stats["Média"].min()
+        
+        col_i1, col_i2, col_i3 = st.columns(3)
+        with col_i1:
+            st.success(f"🏆 Melhor Faixa: **{faixa_melhor}** ({media_melhor:.2f})")
+        with col_i2:
+            st.warning(f"📍 Faixa Crítica: **{faixa_pior}** ({media_pior:.2f})")
+        with col_i3:
+            std_geral = df_faixas["MEDIA_FINAL"].std()
+            st.info(f"📊 Desvio Padrão Geral: **{std_geral:.2f}**")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1442,7 +1462,7 @@ elif pagina == "🪖 Por Posto/Graduação":
     st.markdown("""
     <h1 style="margin:0;font-size:2rem;">🪖 Análise por Posto/Graduação</h1>
     <p style="margin:6px 0 12px;color:#94a3b8;">
-    Comparativo de desempenho entre os diferentes postos e graduações
+      Comparativo de desempenho entre os diferentes postos e graduações
     </p>
     """, unsafe_allow_html=True)
     st.divider()
@@ -1465,7 +1485,7 @@ elif pagina == "🪖 Por Posto/Graduação":
         resumo["_ordem"] = resumo["POSTO_GRAD"].apply(ordem_posto)
         resumo = resumo.sort_values("_ordem").drop(columns=["_ordem"])
         resumo.columns = ["Posto/Grad", "Efetivo", "Média", "Mediana",
-                        "Mínimo", "Máximo", "Desvio Padrão"]
+                          "Mínimo", "Máximo", "Desvio Padrão"]
         for c in ["Média", "Mediana", "Mínimo", "Máximo", "Desvio Padrão"]:
             resumo[c] = resumo[c].round(2)
         st.dataframe(resumo, hide_index=True)
@@ -1612,7 +1632,7 @@ elif pagina == "📋 Por Quadro":
     st.markdown("""
     <h1 style="margin:0;font-size:2rem;">📋 Análise por Quadro</h1>
     <p style="margin:6px 0 12px;color:#94a3b8;">
-    Comparativo de desempenho entre os diferentes quadros (QCOBM, QCPBM, QPBM, etc.)
+      Comparativo de desempenho entre os diferentes quadros (QCOBM, QCPBM, QPBM, etc.)
     </p>
     """, unsafe_allow_html=True)
     st.divider()
@@ -1756,33 +1776,30 @@ elif pagina == "👤 Ficha Individual":
     st.markdown("""
     <h1 style="margin:0;font-size:2rem;">👤 Ficha Individual</h1>
     <p style="margin:6px 0 12px;color:#94a3b8;">
-    Perfil detalhado de cada militar
+      Perfil detalhado de cada militar
     </p>
     """, unsafe_allow_html=True)
 
     with st.sidebar:
-        st.markdown("#### 🔍 Selecionar Militar")
-        busca = st.text_input("🔎 Buscar por nome", placeholder="Digite parte do nome...", key="busca_ficha")
+        st.markdown("**Selecionar Militar**")
+        busca = st.text_input("Buscar por nome", placeholder="Digite parte do nome...")
 
         # Filtrar apenas militares com dados completos (presente + media final valida)
         df_busca = df_all[df_all["PRESENTE"] & df_all["MEDIA_FINAL"].notna()].copy()
         
         if len(df_busca) == 0:
-            st.error("❌ Nenhum militar com dados completos disponível.")
+            st.error("Nenhum militar com dados completos disponivel.")
             st.stop()
-        
-        st.markdown(f"<p style='font-size:0.85rem;color:#94a3b8;'>Total: {len(df_busca)} militares</p>", unsafe_allow_html=True)
         
         lista_nomes = df_busca["NOME"].tolist()
         if busca:
             lista_nomes = [n for n in lista_nomes if busca.upper() in n]
 
         if not lista_nomes:
-            st.warning(f"⚠️ Nenhum militar encontrado para '{busca}'")
+            st.warning(f"Nenhum militar encontrado para '{busca}'")
             lista_nomes = df_busca["NOME"].tolist()
 
-        st.markdown("**Selecione um militar:**", unsafe_allow_html=True)
-        militar_sel = st.selectbox("militar", lista_nomes, index=0, label_visibility="collapsed")
+        militar_sel = st.selectbox("Selecione um militar", lista_nomes, index=0)
 
     # Verificar se militar foi selecionado
     if militar_sel is None or militar_sel == "":
@@ -1848,59 +1865,59 @@ elif pagina == "👤 Ficha Individual":
     <div style="background:linear-gradient(135deg,rgba(239,68,68,.15),rgba(59,130,246,.1));
                 border:1px solid rgba(239,68,68,.3);border-radius:16px;
                 padding:24px 28px;margin-bottom:20px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
         <div>
-        <div style="font-size:1.8rem;font-weight:800;">🪖 {nome_curto}</div>
-        <div style="color:#94a3b8;margin-top:4px;">
+          <div style="font-size:1.8rem;font-weight:800;">🪖 {nome_curto}</div>
+          <div style="color:#94a3b8;margin-top:4px;">
             {posto_ind} · {quadro_ind} · CBMAM · 2026
-        </div>
+          </div>
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <div style="background:{badge_cor[2]};border-radius:12px;padding:10px 20px;text-align:center;">
+          <div style="background:{badge_cor[2]};border-radius:12px;padding:10px 20px;text-align:center;">
             <div style="font-size:.75rem;color:#94a3b8;">CLASSIFICAÇÃO</div>
             <div style="font-size:1.3rem;font-weight:800;color:{badge_cor[0]};">{class_ind}</div>
-        </div>
-        <div style="background:rgba(255,255,255,.05);border-radius:12px;padding:10px 20px;text-align:center;">
+          </div>
+          <div style="background:rgba(255,255,255,.05);border-radius:12px;padding:10px 20px;text-align:center;">
             <div style="font-size:.75rem;color:#94a3b8;">MÉDIA FINAL</div>
             <div style="font-size:1.3rem;font-weight:800;">{media_ind:.1f}</div>
-        </div>
-        <div style="background:rgba(255,255,255,.05);border-radius:12px;padding:10px 20px;text-align:center;">
+          </div>
+          <div style="background:rgba(255,255,255,.05);border-radius:12px;padding:10px 20px;text-align:center;">
             <div style="font-size:.75rem;color:#94a3b8;">RANKING</div>
             <div style="font-size:1.3rem;font-weight:800;">{posicao}° / {total}</div>
-        </div>
-        <div style="background:rgba(255,255,255,.05);border-radius:12px;padding:10px 20px;text-align:center;">
+          </div>
+          <div style="background:rgba(255,255,255,.05);border-radius:12px;padding:10px 20px;text-align:center;">
             <div style="font-size:.75rem;color:#94a3b8;">vs GERAL</div>
             <div style="font-size:1.3rem;font-weight:800;color:{cor_g};">{sinal_g}{diff_geral:.2f}</div>
-        </div>
-        <div style="background:rgba(255,255,255,.05);border-radius:12px;padding:10px 20px;text-align:center;">
+          </div>
+          <div style="background:rgba(255,255,255,.05);border-radius:12px;padding:10px 20px;text-align:center;">
             <div style="font-size:.75rem;color:#94a3b8;">vs {posto_ind}</div>
             <div style="font-size:1.3rem;font-weight:800;color:{cor_p};">{sinal_p}{diff_posto:.2f}</div>
+          </div>
         </div>
-        </div>
-    </div>
+      </div>
     </div>
     """, unsafe_allow_html=True)
 
     # Dados brutos do militar
-    st.markdown('<p class="section-title">📝 Desempenho Bruto (Valores Realizados)</p>',
+    st.markdown('<p class="section-title">📝 Desempenho Bruto</p>',
                 unsafe_allow_html=True)
     raw_cols = st.columns(5)
     raw_data = [
-        ("🏃 Corrida 12min", row["CORRIDA"], "metros"),
-        ("💪 Abdominal", row["ABDOMINAL"], "reps"),
-        ("🤸 Flexão", row["FLEXAO"], "reps"),
-        ("🏊 Natação 50m", row["NATACAO_SEG"], "seg"),
-        ("🔩 Barra", row["BARRA_VALOR"], "rep/seg"),
+        ("🏃 Corrida 12min", row["CORRIDA_RAW"], "metros"),
+        ("💪 Abdominal", row["ABDOMINAL_RAW"], "reps"),
+        ("🤸 Flexão", row["FLEXAO_RAW"], "reps"),
+        ("🏊 Natação 50m", row["NATACAO_RAW"], ""),
+        ("🔩 Barra", row["BARRA_RAW"], f"({row['BARRA_TIPO']})" if pd.notna(row.get("BARRA_TIPO")) else ""),
     ]
     for i, (label, val, unit) in enumerate(raw_data):
         with raw_cols[i]:
-            display_val = str(int(val)) if pd.notna(val) and val != 0 else "—"
+            display_val = str(val) if pd.notna(val) and str(val).strip() not in ("nan", "") else "—"
             st.markdown(f"""
-            <div style="background:rgba(17,27,46,.95);border:2px solid rgba(59,130,246,.4);
-                        border-radius:14px;padding:16px;text-align:center;box-shadow: 0 4px 12px rgba(0,0,0,.3);">
-            <div style="font-size:.7rem;color:#e0e7ff;font-weight:600;margin-bottom:8px;">{label}</div>
-            <div style="font-size:1.8rem;font-weight:900;margin:6px 0;color:#60a5fa;">{display_val}</div>
-            <div style="font-size:.65rem;color:#cbd5e1;font-weight:500;">{unit}</div>
+            <div style="background:rgba(17,27,46,.8);border:1px solid rgba(255,255,255,.1);
+                        border-radius:14px;padding:12px;text-align:center;">
+              <div style="font-size:.75rem;color:#94a3b8;">{label}</div>
+              <div style="font-size:1.5rem;font-weight:800;margin:4px 0;">{display_val}</div>
+              <div style="font-size:.7rem;color:#64748b;">{unit}</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -1995,17 +2012,17 @@ elif pagina == "👤 Ficha Individual":
             st.markdown(f"""
             <div style="background:rgba(17,27,46,.8);border:1px solid rgba(255,255,255,.1);
                         border-radius:14px;padding:16px;text-align:center;">
-            <div style="font-size:.8rem;color:#94a3b8;margin-bottom:8px;">{label}</div>
-            <div style="font-size:2rem;font-weight:800;">{nota_v:.1f}</div>
-            <div style="font-size:.8rem;color:{c_delta};margin-top:4px;">
+              <div style="font-size:.8rem;color:#94a3b8;margin-bottom:8px;">{label}</div>
+              <div style="font-size:2rem;font-weight:800;">{nota_v:.1f}</div>
+              <div style="font-size:.8rem;color:{c_delta};margin-top:4px;">
                 {icone} {s}{delta_v:.2f} vs geral
-            </div>
-            <div style="background:rgba(255,255,255,.06);border-radius:6px;
-                        margin-top:10px;height:6px;overflow:hidden;">
+              </div>
+              <div style="background:rgba(255,255,255,.06);border-radius:6px;
+                          margin-top:10px;height:6px;overflow:hidden;">
                 <div style="width:{nota_v * 10}%;height:100%;
                             background:{'#22c55e' if nota_v >= 9.0 else '#3b82f6' if nota_v >= 7.5 else '#f59e0b' if nota_v >= 6.0 else '#ef4444'};
                             border-radius:6px;"></div>
-            </div>
+              </div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -2017,11 +2034,11 @@ elif pagina == "👤 Ficha Individual":
         mode="gauge+number+delta",
         value=media_ind,
         delta={"reference": media_geral, "valueformat": ".2f",
-            "increasing": {"color": "#22c55e"},
-            "decreasing": {"color": "#ef4444"}},
+               "increasing": {"color": "#22c55e"},
+               "decreasing": {"color": "#ef4444"}},
         title={"text": f"Média Final · {nome_curto}<br>"
-            f"<span style='font-size:.8rem;color:#94a3b8'>"
-            f"Ref: média geral ({media_geral:.2f})</span>"},
+               f"<span style='font-size:.8rem;color:#94a3b8'>"
+               f"Ref: média geral ({media_geral:.2f})</span>"},
         gauge={
             "axis": {"range": [0, 10], "tickcolor": "#94a3b8"},
             "bar": {"color": COR_MAP.get(class_ind, "#3b82f6")},
@@ -2031,35 +2048,35 @@ elif pagina == "👤 Ficha Individual":
                 {"range": [0, 6.0], "color": "rgba(239,68,68,.15)"},
                 {"range": [6.0, 7.5], "color": "rgba(245,158,11,.15)"},
                 {"range": [7.5, 9.0], "color": "rgba(59,130,246,.15)"},
-                {"range": [9.0, 10], "color": "rgba(34,197,94,.15)"},
-            ],
-            "threshold": {
-                "line": {"color": "#f59e0b", "width": 3},
-                "thickness": 0.8,
-                "value": media_geral,
+                    {"range": [9.0, 10], "color": "rgba(34,197,94,.15)"},
+                ],
+                "threshold": {
+                    "line": {"color": "#f59e0b", "width": 3},
+                    "thickness": 0.8,
+                    "value": media_geral,
+                },
             },
-        },
-        number={"font": {"color": "#e7eefc", "size": 56}},
-    ))
-    fig_gauge.update_layout(
-        **DARK, height=320, margin=dict(t=60, b=20, l=40, r=40),
-    )
-    st.plotly_chart(fig_gauge, use_column_width=True)
+            number={"font": {"color": "#e7eefc", "size": 56}},
+        ))
+        fig_gauge.update_layout(
+            **DARK, height=320, margin=dict(t=60, b=20, l=40, r=40),
+        )
+        st.plotly_chart(fig_gauge, use_column_width=True)
 
-    # Resumo
-    st.markdown(f"""
-    <div style="background:rgba(17,27,46,.8);border:1px solid rgba(255,255,255,.1);
-                border-radius:14px;padding:20px;margin-top:10px;line-height:2;">
-    <b>🪖 Posto/Graduação:</b> {posto_ind} · {quadro_ind}<br>
-    <b>🟢 Ponto forte:</b> {pf_forte} ({pf_notas.get(pf_forte, 0):.1f})<br>
-    <b>🔴 Ponto fraco:</b> {pf_fraco} ({pf_notas.get(pf_fraco, 0):.1f})<br>
-    <b>📍 Ranking:</b> {posicao}° de {total} avaliados<br>
-    <b>📈 vs Média geral ({media_geral:.2f}):</b>
-    <span style="color:{cor_g};font-weight:700;">{sinal_g}{diff_geral:.2f}</span><br>
-    <b>📈 vs Média {posto_ind} ({media_posto:.2f}):</b>
-    <span style="color:{cor_p};font-weight:700;">{sinal_p}{diff_posto:.2f}</span>
-    </div>
-    """, unsafe_allow_html=True)
+        # Resumo
+        st.markdown(f"""
+        <div style="background:rgba(17,27,46,.8);border:1px solid rgba(255,255,255,.1);
+                    border-radius:14px;padding:20px;margin-top:10px;line-height:2;">
+          <b>🪖 Posto/Graduação:</b> {posto_ind} · {quadro_ind}<br>
+          <b>🟢 Ponto forte:</b> {pf_forte} ({pf_notas.get(pf_forte, 0):.1f})<br>
+          <b>🔴 Ponto fraco:</b> {pf_fraco} ({pf_notas.get(pf_fraco, 0):.1f})<br>
+          <b>📍 Ranking:</b> {posicao}° de {total} avaliados<br>
+          <b>📈 vs Média geral ({media_geral:.2f}):</b>
+          <span style="color:{cor_g};font-weight:700;">{sinal_g}{diff_geral:.2f}</span><br>
+          <b>📈 vs Média {posto_ind} ({media_posto:.2f}):</b>
+          <span style="color:{cor_p};font-weight:700;">{sinal_p}{diff_posto:.2f}</span>
+        </div>
+        """, unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -2069,7 +2086,7 @@ elif pagina == "📈 Estatísticas":
     st.markdown("""
     <h1 style="margin:0;font-size:2rem;">📈 Análise Estatística</h1>
     <p style="margin:6px 0 12px;color:#94a3b8;">
-    Boxplots, distribuições, correlações e percentis do TAF
+      Boxplots, distribuições, correlações e percentis do TAF
     </p>
     """, unsafe_allow_html=True)
     st.divider()
@@ -2195,7 +2212,7 @@ elif pagina == "📈 Estatísticas":
 
         raw_stats = pd.DataFrame({
             "Exercício": ["Corrida 12min (m)", "Abdominal (reps)", "Flexão (reps)",
-                        "Natação 50m (seg)", "Barra (valor)"],
+                          "Natação 50m (seg)", "Barra (valor)"],
             "Média": [
                 df_presentes["CORRIDA"].mean(),
                 df_presentes["ABDOMINAL"].mean(),
@@ -2235,7 +2252,7 @@ elif pagina == "♿ TAF Adaptado":
     st.markdown("""
     <h1 style="margin:0;font-size:2rem;">♿ TAF Adaptado</h1>
     <p style="margin:6px 0 12px;color:#94a3b8;">
-    Dados dos militares que realizaram o TAF na modalidade adaptada
+      Dados dos militares que realizaram o TAF na modalidade adaptada
     </p>
     """, unsafe_allow_html=True)
     st.divider()
