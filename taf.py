@@ -638,6 +638,9 @@ ORDEM_POSTO = {
     "CB": 12, "SD": 13,
 }
 
+# Quadros conhecidos em ordem alfabética
+QUADROS_CONHECIDOS = ["QCOBM", "QCPBM", "QOABM", "QOBM", "QPBM", "QPEBM"]
+
 # ══════════════════════════════════════════════════════════════════════════════
 # REGRAS DE PONTUAÇÃO - MASCULINO (10 FAIXAS ETÁRIAS)
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1430,7 +1433,7 @@ with st.sidebar:
         filtro_posto = st.multiselect("Posto/Graduação", postos_disponiveis,
                                     default=postos_disponiveis)
 
-        quadros_disponiveis = sorted([q for q in df_all[df_all["PRESENTE"]]["QUADRO"].unique().tolist() if q and str(q).strip() not in ["", "nan", "S/N"]])
+        quadros_disponiveis = sorted(list(set(QUADROS_CONHECIDOS + [q for q in df_all[df_all["PRESENTE"]]["QUADRO"].unique().tolist() if q and str(q).strip() not in ["", "nan", "S/N"]])))
         filtro_quadro = st.multiselect("Quadro", quadros_disponiveis,
                                         default=quadros_disponiveis)
 
