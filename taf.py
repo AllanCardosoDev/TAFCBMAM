@@ -2800,14 +2800,14 @@ elif pagina == "📈 Estatísticas":
                 df_presentes["CORRIDA"].min(),
                 df_presentes["ABDOMINAL"].min(),
                 df_presentes["FLEXAO"].min(),
-                df_presentes["NATACAO_SEG"].min(),
+                df_presentes["NATACAO_SEG"].max(),
                 df_presentes["BARRA_VALOR"].min(),
             ],
             "Máximo": [
                 df_presentes["CORRIDA"].max(),
                 df_presentes["ABDOMINAL"].max(),
                 df_presentes["FLEXAO"].max(),
-                df_presentes["NATACAO_SEG"].max(),
+                df_presentes["NATACAO_SEG"].min(),
                 df_presentes["BARRA_VALOR"].max(),
             ],
         }).round(1)
