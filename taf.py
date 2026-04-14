@@ -1590,7 +1590,7 @@ if pagina == "🏠 Visão Geral":
                     "POSTO_GRAD": True, "QUADRO": True},
             labels={"MEDIA_FINAL": "Média Final", "LABEL": ""},
         )
-        fig_rank.update_traces(texttemplate="%{text:.1f}", textposition="outside", textfont=dict(size=13))
+        fig_rank.update_traces(texttemplate="%{text:.1f}", textposition="outside", textfont=dict(size=14, family="Arial Black", color="white"))
         fig_rank.update_layout(
             **DARK, height=max(500, len(df_rank) * 20),
             legend_title_text="Classificação",
@@ -1637,7 +1637,7 @@ if pagina == "🏠 Visão Geral":
             fig_hist.add_vline(
                 x=media_geral, line_dash="dash", line_color="#ef4444",
                 annotation_text=f"Média: {media_geral:.2f}",
-                annotation_font_color="#ef4444", annotation_font_size=12,
+                annotation_font_color="white", annotation_font_size=13, annotation_font_family="Arial Black",
             )
             fig_hist.update_layout(
                 **DARK, margin=dict(t=50, b=10),
@@ -1662,7 +1662,7 @@ if pagina == "🏠 Visão Geral":
             title="Nota média por exercício",
         )
         fig_disc.update_traces(texttemplate="%{text:.2f}", textposition="outside",
-                            showlegend=False, textfont=dict(size=13))
+                            showlegend=False, textfont=dict(size=14, family="Arial Black", color="white"))
         fig_disc.update_layout(
             **DARK, height=320,
             xaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
@@ -1729,6 +1729,7 @@ if pagina == "🏠 Visão Geral":
             zmin=0, zmax=10,
             text=[[f"{v:.1f}" if pd.notna(v) else "—" for v in row] for row in z_vals],
             texttemplate="%{text}",
+            textfont=dict(size=12, family="Arial Black", color="white"),
             hovertemplate="<b>%{y}</b><br>%{x}: %{z:.1f}<extra></extra>",
             colorbar=dict(title="Nota", tickfont_color=DARK.get("font_color"),
                         title_font_color=DARK.get("font_color")),
@@ -2034,7 +2035,7 @@ elif pagina == "🪖 Por Posto/Graduação":
             labels={"POSTO_GRAD": "Posto/Graduação", "MEDIA_FINAL": "Média"},
             title="Média final por posto/graduação",
         )
-        fig_posto.update_traces(texttemplate="%{text:.2f}", textposition="outside", textfont=dict(size=13))
+        fig_posto.update_traces(texttemplate="%{text:.2f}", textposition="outside", textfont=dict(size=14, family="Arial Black", color="white"))
         fig_posto.update_layout(
             **DARK, height=400, coloraxis_showscale=False,
             xaxis=dict(**GRID, tickfont=dict(size=12)), yaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
@@ -2146,7 +2147,7 @@ elif pagina == "🪖 Por Posto/Graduação":
             labels={"POSTO_GRAD": "Posto/Graduação"},
             title="Percentual de ausência por posto",
         )
-        fig_aus.update_traces(texttemplate="%{text:.1f}%", textposition="outside", textfont=dict(size=13))
+        fig_aus.update_traces(texttemplate="%{text:.1f}%", textposition="outside", textfont=dict(size=14, family="Arial Black", color="white"))
         fig_aus.update_layout(
             **DARK, height=350, coloraxis_showscale=False,
             xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(**GRID, tickfont=dict(size=12)),
@@ -2203,7 +2204,7 @@ elif pagina == "📋 Por Quadro":
             labels={"QUADRO": "Quadro", "MEDIA_FINAL": "Média"},
             title="Média final por quadro",
         )
-        fig_q.update_traces(texttemplate="%{text:.2f}", textposition="outside", textfont=dict(size=13))
+        fig_q.update_traces(texttemplate="%{text:.2f}", textposition="outside", textfont=dict(size=14, family="Arial Black", color="white"))
         fig_q.update_layout(
             **DARK, height=400, coloraxis_showscale=False,
             xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
@@ -2294,7 +2295,7 @@ elif pagina == "📋 Por Quadro":
             barmode="group", text="Média",
             title="Média por atividade e quadro",
         )
-        fig_disc_q.update_traces(texttemplate="%{text:.1f}", textposition="outside", textfont=dict(size=12))
+        fig_disc_q.update_traces(texttemplate="%{text:.1f}", textposition="outside", textfont=dict(size=13, family="Arial Black", color="white"))
         fig_disc_q.update_layout(
             **DARK, height=420,
             xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
@@ -2830,7 +2831,7 @@ elif pagina == "♿ TAF Adaptado":
             labels={"POSTO_GRAD": "Posto/Graduação"},
             title="Militares no TAF Adaptado por posto",
         )
-        fig_adapt.update_traces(textposition="outside", textfont=dict(size=13))
+        fig_adapt.update_traces(textposition="outside", textfont=dict(size=14, family="Arial Black", color="white"))
         fig_adapt.update_layout(
             **DARK, height=350, coloraxis_showscale=False,
             xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(**GRID, tickfont=dict(size=12)),
@@ -2888,7 +2889,7 @@ elif pagina == "♿ TAF Adaptado":
                 text="Realizaram",
                 title="Quantidade de militares por exercício (TAF Adaptado)",
             )
-            fig_ex.update_traces(textposition="outside", textfont=dict(size=13))
+            fig_ex.update_traces(textposition="outside", textfont=dict(size=14, family="Arial Black", color="white"))
             fig_ex.update_layout(
                 **DARK, height=400, coloraxis_showscale=False,
                 xaxis=dict(**GRID, tickangle=-45, tickfont=dict(size=11)),
