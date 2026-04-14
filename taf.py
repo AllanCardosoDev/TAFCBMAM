@@ -1747,11 +1747,12 @@ if pagina == "🏠 Visão Geral":
             color_continuous_scale=["#22c55e", "#f59e0b", "#ef4444"],
             text="Quantidade", title="Atividade com pior nota individual",
         )
-        fig_pf.update_traces(textposition="outside")
+        fig_pf.update_traces(textposition="outside", textfont=dict(size=13))
         fig_pf.update_layout(
             **DARK, coloraxis_showscale=False,
-            yaxis=dict(**GRID), xaxis=dict(**GRID),
+            yaxis=dict(**GRID, tickfont=dict(size=12)), xaxis=dict(**GRID, tickfont=dict(size=12)),
             margin=dict(t=50, b=20), height=350,
+            font=dict(size=14),
         )
         style_plotly_chart(fig_pf, use_container_width=True)
 
