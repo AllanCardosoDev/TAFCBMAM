@@ -71,7 +71,7 @@ def tela_login():
     """Exibe a tela de login."""
     # Credenciais padrão (pode ser alterado para usar arquivo ou banco de dados)
     USUARIOS_VALIDOS = {
-        "bm6": "taf2026"
+        "tafcbmam2026": "@tafcbmam2026"
     }
     
     # Layout centralizado da tela de login
@@ -96,11 +96,6 @@ def tela_login():
                     st.rerun()
                 else:
                     st.error("❌ Usuário ou senha incorretos!")
-        
-        st.markdown("<div style='margin-top: 40px; padding: 20px; background: #f0f0f0; border-radius: 10px;'>", unsafe_allow_html=True)
-        st.markdown("##### 📌 Credenciais de Teste", unsafe_allow_html=True)
-        st.code("bm6 / taf2026", language=None)
-        st.markdown("</div>", unsafe_allow_html=True)
 
 
 # Verificar autenticação no início
