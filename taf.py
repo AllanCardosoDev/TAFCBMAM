@@ -1590,12 +1590,13 @@ if pagina == "🏠 Visão Geral":
                     "POSTO_GRAD": True, "QUADRO": True},
             labels={"MEDIA_FINAL": "Média Final", "LABEL": ""},
         )
-        fig_rank.update_traces(texttemplate="%{text:.1f}", textposition="outside")
+        fig_rank.update_traces(texttemplate="%{text:.1f}", textposition="outside", textfont=dict(size=13))
         fig_rank.update_layout(
             **DARK, height=max(500, len(df_rank) * 20),
             legend_title_text="Classificação",
-            xaxis=dict(range=[0, 11], **GRID),
-            yaxis=dict(**GRID),
+            xaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
+            yaxis=dict(**GRID, tickfont=dict(size=11)),
+            font=dict(size=13),
             margin=dict(l=10, r=60, t=20, b=20),
         )
         style_plotly_chart(fig_rank, use_container_width=True)
@@ -1620,7 +1621,8 @@ if pagina == "🏠 Visão Geral":
             )
             fig_pie.update_layout(
                 **DARK,
-                legend=dict(orientation="h", yanchor="bottom", y=-0.2),
+                legend=dict(orientation="h", yanchor="bottom", y=-0.2, font=dict(size=12)),
+                font=dict(size=13),
                 margin=dict(t=50, b=10),
             )
             style_plotly_chart(fig_pie, use_container_width=True)
@@ -1635,11 +1637,12 @@ if pagina == "🏠 Visão Geral":
             fig_hist.add_vline(
                 x=media_geral, line_dash="dash", line_color="#ef4444",
                 annotation_text=f"Média: {media_geral:.2f}",
-                annotation_font_color="#ef4444",
+                annotation_font_color="#ef4444", annotation_font_size=12,
             )
             fig_hist.update_layout(
                 **DARK, margin=dict(t=50, b=10),
-                yaxis=dict(**GRID), xaxis=dict(**GRID),
+                yaxis=dict(**GRID, tickfont=dict(size=12)), xaxis=dict(**GRID, tickfont=dict(size=12)),
+                font=dict(size=13),
             )
             style_plotly_chart(fig_hist, use_container_width=True)
 
@@ -1659,11 +1662,12 @@ if pagina == "🏠 Visão Geral":
             title="Nota média por exercício",
         )
         fig_disc.update_traces(texttemplate="%{text:.2f}", textposition="outside",
-                            showlegend=False)
+                            showlegend=False, textfont=dict(size=13))
         fig_disc.update_layout(
             **DARK, height=320,
-            xaxis=dict(range=[0, 11], **GRID),
-            yaxis=dict(**GRID),
+            xaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
+            yaxis=dict(**GRID, tickfont=dict(size=11)),
+            font=dict(size=13),
             margin=dict(l=10, r=70, t=50, b=20),
         )
         style_plotly_chart(fig_disc, use_container_width=True)
@@ -1697,11 +1701,13 @@ if pagina == "🏠 Visão Geral":
                 bgcolor="rgba(0,0,0,0)",
                 radialaxis=dict(visible=True, range=[0, 10],
                                 gridcolor=GRID.get("gridcolor"),
+                                tickfont=dict(size=11, color=DARK.get("font_color")),
                                 tickfont_color=DARK.get("font_color")),
-                angularaxis=dict(gridcolor=GRID.get("gridcolor")),
+                angularaxis=dict(gridcolor=GRID.get("gridcolor"), tickfont=dict(size=11)),
             ),
             **DARK,
-            legend=dict(orientation="h", yanchor="bottom", y=-0.15),
+            legend=dict(orientation="h", yanchor="bottom", y=-0.15, font=dict(size=12)),
+            font=dict(size=13),
             height=420, title="Comparativo — Top 5 vs Bottom 5",
         )
         style_plotly_chart(fig_radar, use_container_width=True)
@@ -1730,7 +1736,9 @@ if pagina == "🏠 Visão Geral":
         fig_heat.update_layout(
             **DARK, height=max(500, len(df_heat) * 20),
             margin=dict(l=10, r=10, t=20, b=20),
-            xaxis=dict(side="top"),
+            xaxis=dict(side="top", tickfont=dict(size=11)),
+            yaxis=dict(tickfont=dict(size=10)),
+            font=dict(size=12),
         )
         style_plotly_chart(fig_heat, use_container_width=True)
 
@@ -2026,10 +2034,11 @@ elif pagina == "🪖 Por Posto/Graduação":
             labels={"POSTO_GRAD": "Posto/Graduação", "MEDIA_FINAL": "Média"},
             title="Média final por posto/graduação",
         )
-        fig_posto.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+        fig_posto.update_traces(texttemplate="%{text:.2f}", textposition="outside", textfont=dict(size=13))
         fig_posto.update_layout(
             **DARK, height=400, coloraxis_showscale=False,
-            xaxis=dict(**GRID), yaxis=dict(range=[0, 11], **GRID),
+            xaxis=dict(**GRID, tickfont=dict(size=12)), yaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
+            font=dict(size=13),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_posto, use_container_width=True)
@@ -2073,7 +2082,8 @@ elif pagina == "🪖 Por Posto/Graduação":
         )
         fig_stack.update_layout(
             **DARK, height=400,
-            xaxis=dict(**GRID), yaxis=dict(**GRID),
+            xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(**GRID, tickfont=dict(size=12)),
+            font=dict(size=13),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_stack, use_container_width=True)
@@ -2136,10 +2146,11 @@ elif pagina == "🪖 Por Posto/Graduação":
             labels={"POSTO_GRAD": "Posto/Graduação"},
             title="Percentual de ausência por posto",
         )
-        fig_aus.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
+        fig_aus.update_traces(texttemplate="%{text:.1f}%", textposition="outside", textfont=dict(size=13))
         fig_aus.update_layout(
             **DARK, height=350, coloraxis_showscale=False,
-            xaxis=dict(**GRID), yaxis=dict(**GRID),
+            xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(**GRID, tickfont=dict(size=12)),
+            font=dict(size=13),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_aus, use_container_width=True)
@@ -2192,10 +2203,11 @@ elif pagina == "📋 Por Quadro":
             labels={"QUADRO": "Quadro", "MEDIA_FINAL": "Média"},
             title="Média final por quadro",
         )
-        fig_q.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+        fig_q.update_traces(texttemplate="%{text:.2f}", textposition="outside", textfont=dict(size=13))
         fig_q.update_layout(
             **DARK, height=400, coloraxis_showscale=False,
-            xaxis=dict(**GRID), yaxis=dict(range=[0, 11], **GRID),
+            xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
+            font=dict(size=13),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_q, use_container_width=True)
@@ -2212,7 +2224,8 @@ elif pagina == "📋 Por Quadro":
         )
         fig_box_q.update_layout(
             **DARK, height=450, showlegend=False,
-            xaxis=dict(**GRID), yaxis=dict(**GRID),
+            xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(**GRID, tickfont=dict(size=12)),
+            font=dict(size=13),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_box_q, use_container_width=True)
@@ -2233,7 +2246,8 @@ elif pagina == "📋 Por Quadro":
         )
         fig_stack_q.update_layout(
             **DARK, height=400,
-            xaxis=dict(**GRID), yaxis=dict(**GRID),
+            xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(**GRID, tickfont=dict(size=12)),
+            font=dict(size=13),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_stack_q, use_container_width=True)
@@ -2280,10 +2294,11 @@ elif pagina == "📋 Por Quadro":
             barmode="group", text="Média",
             title="Média por atividade e quadro",
         )
-        fig_disc_q.update_traces(texttemplate="%{text:.1f}", textposition="outside")
+        fig_disc_q.update_traces(texttemplate="%{text:.1f}", textposition="outside", textfont=dict(size=12))
         fig_disc_q.update_layout(
             **DARK, height=420,
-            xaxis=dict(**GRID), yaxis=dict(range=[0, 11], **GRID),
+            xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
+            font=dict(size=13),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_disc_q, use_container_width=True)
@@ -2633,7 +2648,8 @@ elif pagina == "📈 Estatísticas":
         )
         fig_box.update_layout(
             **DARK, height=450, showlegend=False,
-            xaxis=dict(**GRID), yaxis=dict(range=[0, 11], **GRID),
+            xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
+            font=dict(size=13),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_box, use_container_width=True)
@@ -2652,9 +2668,10 @@ elif pagina == "📈 Estatísticas":
             ))
         fig_hist_all.update_layout(
             **DARK, height=400, barmode="overlay",
-            xaxis=dict(title="Nota", **GRID),
-            yaxis=dict(title="Frequência", **GRID),
+            xaxis=dict(title="Nota", **GRID, tickfont=dict(size=12)),
+            yaxis=dict(title="Frequência", **GRID, tickfont=dict(size=12)),
             title="Sobreposição de distribuições",
+            font=dict(size=13),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_hist_all, use_container_width=True)
@@ -2674,7 +2691,8 @@ elif pagina == "📈 Estatísticas":
         )
         fig_scatter.update_layout(
             **DARK, height=420,
-            yaxis=dict(**GRID), xaxis=dict(**GRID),
+            yaxis=dict(**GRID, tickfont=dict(size=12)), xaxis=dict(**GRID, tickfont=dict(size=12)),
+            font=dict(size=13),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_scatter, use_container_width=True)
@@ -2812,10 +2830,11 @@ elif pagina == "♿ TAF Adaptado":
             labels={"POSTO_GRAD": "Posto/Graduação"},
             title="Militares no TAF Adaptado por posto",
         )
-        fig_adapt.update_traces(textposition="outside")
+        fig_adapt.update_traces(textposition="outside", textfont=dict(size=13))
         fig_adapt.update_layout(
             **DARK, height=350, coloraxis_showscale=False,
-            xaxis=dict(**GRID), yaxis=dict(**GRID),
+            xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(**GRID, tickfont=dict(size=12)),
+            font=dict(size=13),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_adapt, use_container_width=True)
@@ -2869,11 +2888,12 @@ elif pagina == "♿ TAF Adaptado":
                 text="Realizaram",
                 title="Quantidade de militares por exercício (TAF Adaptado)",
             )
-            fig_ex.update_traces(textposition="outside")
+            fig_ex.update_traces(textposition="outside", textfont=dict(size=13))
             fig_ex.update_layout(
                 **DARK, height=400, coloraxis_showscale=False,
-                xaxis=dict(**GRID, tickangle=-45),
-                yaxis=dict(**GRID),
+                xaxis=dict(**GRID, tickangle=-45, tickfont=dict(size=11)),
+                yaxis=dict(**GRID, tickfont=dict(size=12)),
+                font=dict(size=13),
                 margin=dict(t=50, b=20),
             )
             style_plotly_chart(fig_ex, use_container_width=True)
