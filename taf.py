@@ -71,8 +71,6 @@ def tela_login():
     """Exibe a tela de login."""
     # Credenciais padrão (pode ser alterado para usar arquivo ou banco de dados)
     USUARIOS_VALIDOS = {
-        "admin": "cbmam2024",
-        "user": "taf2024",
         "bm6": "taf2026"
     }
     
@@ -101,7 +99,7 @@ def tela_login():
         
         st.markdown("<div style='margin-top: 40px; padding: 20px; background: #f0f0f0; border-radius: 10px;'>", unsafe_allow_html=True)
         st.markdown("##### 📌 Credenciais de Teste", unsafe_allow_html=True)
-        st.code("admin / cbmam2024\nuser / taf2024\nbm6 / taf2026", language=None)
+        st.code("bm6 / taf2026", language=None)
         st.markdown("</div>", unsafe_allow_html=True)
 
 
