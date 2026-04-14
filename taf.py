@@ -345,11 +345,14 @@ else:
 # ── CSS estrutural (tema-agnóstico, usa variáveis CSS acima) ───────────────
 st.markdown("""<style>
 /* ── Streamlit chrome ──────────────────────────────────────── */
-[data-testid="stHeader"]        { display:none !important; }
+[data-testid="stHeader"]        { background:transparent !important; height:0 !important; min-height:0 !important; overflow:visible !important; }
 [data-testid="stToolbar"]       { display:none !important; }
 [data-testid="stDecoration"]    { display:none !important; }
 .stDeployButton                  { display:none !important; }
 footer, #MainMenu                { display:none !important; }
+/* Manter botão de abrir/fechar sidebar sempre visível */
+[data-testid="stSidebarCollapsedControl"] { display:flex !important; visibility:visible !important; }
+button[kind="header"]           { display:flex !important; visibility:visible !important; }
 
 /* ── App background ────────────────────────────────────────── */
 [data-testid="stAppViewContainer"]   { background:var(--app-bg)   !important; }
