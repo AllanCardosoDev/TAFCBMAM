@@ -351,7 +351,23 @@ st.markdown("""<style>
 .stDeployButton                  { display:none !important; }
 footer, #MainMenu                { display:none !important; }
 /* Manter botão de abrir/fechar sidebar sempre visível */
-[data-testid="stSidebarCollapsedControl"] { display:flex !important; visibility:visible !important; }
+[data-testid="stSidebarCollapsedControl"] {
+    display:flex !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    position:fixed !important;
+    top:0.5rem !important;
+    left:0 !important;
+    z-index:999999 !important;
+    pointer-events:auto !important;
+}
+[data-testid="stSidebarCollapsedControl"] button,
+[data-testid="stSidebarCollapsedControl"] > * {
+    display:flex !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    pointer-events:auto !important;
+}
 button[kind="header"]           { display:flex !important; visibility:visible !important; }
 
 /* ── App background ────────────────────────────────────────── */
