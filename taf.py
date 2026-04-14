@@ -1596,7 +1596,8 @@ if pagina == "🏠 Visão Geral":
             legend_title_text="Classificação",
             xaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
             yaxis=dict(**GRID, tickfont=dict(size=11)),
-            font=dict(size=13),
+            font=dict(size=13, family="Arial"),
+            title=dict(text="Ranking de Desempenho", font=dict(size=16, family="Arial Black", color="white")),
             margin=dict(l=10, r=60, t=20, b=20),
         )
         style_plotly_chart(fig_rank, use_container_width=True)
@@ -1621,8 +1622,9 @@ if pagina == "🏠 Visão Geral":
             )
             fig_pie.update_layout(
                 **DARK,
-                legend=dict(orientation="h", yanchor="bottom", y=-0.2, font=dict(size=12)),
-                font=dict(size=13),
+                legend=dict(orientation="h", yanchor="bottom", y=-0.2, font=dict(size=13, family="Arial Black")),
+                font=dict(size=14),
+                title=dict(text="Proporção por Classificação", font=dict(size=15, family="Arial Black", color="white")),
                 margin=dict(t=50, b=10),
             )
             style_plotly_chart(fig_pie, use_container_width=True)
@@ -1643,6 +1645,7 @@ if pagina == "🏠 Visão Geral":
                 **DARK, margin=dict(t=50, b=10),
                 yaxis=dict(**GRID, tickfont=dict(size=12)), xaxis=dict(**GRID, tickfont=dict(size=12)),
                 font=dict(size=13),
+                title=dict(text="Histograma de Médias", font=dict(size=15, family="Arial Black", color="white")),
             )
             style_plotly_chart(fig_hist, use_container_width=True)
 
@@ -1668,6 +1671,7 @@ if pagina == "🏠 Visão Geral":
             xaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
             yaxis=dict(**GRID, tickfont=dict(size=11)),
             font=dict(size=13),
+            title=dict(text="Nota Média por Exercício", font=dict(size=16, family="Arial Black", color="white")),
             margin=dict(l=10, r=70, t=50, b=20),
         )
         style_plotly_chart(fig_disc, use_container_width=True)
@@ -2040,6 +2044,7 @@ elif pagina == "🪖 Por Posto/Graduação":
             **DARK, height=400, coloraxis_showscale=False,
             xaxis=dict(**GRID, tickfont=dict(size=12)), yaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
             font=dict(size=13),
+            title=dict(text="Média Final por Posto/Graduação", font=dict(size=16, family="Arial Black", color="white")),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_posto, use_container_width=True)
@@ -2152,6 +2157,7 @@ elif pagina == "🪖 Por Posto/Graduação":
             **DARK, height=350, coloraxis_showscale=False,
             xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(**GRID, tickfont=dict(size=12)),
             font=dict(size=13),
+            title=dict(text="Taxa de Ausência por Posto", font=dict(size=16, family="Arial Black", color="white")),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_aus, use_container_width=True)
@@ -2209,6 +2215,7 @@ elif pagina == "📋 Por Quadro":
             **DARK, height=400, coloraxis_showscale=False,
             xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(range=[0, 11], **GRID, tickfont=dict(size=12)),
             font=dict(size=13),
+            title=dict(text="Média Final por Quadro", font=dict(size=16, family="Arial Black", color="white")),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_q, use_container_width=True)
@@ -2836,6 +2843,7 @@ elif pagina == "♿ TAF Adaptado":
             **DARK, height=350, coloraxis_showscale=False,
             xaxis=dict(**GRID, tickfont=dict(size=11)), yaxis=dict(**GRID, tickfont=dict(size=12)),
             font=dict(size=13),
+            title=dict(text="TAF Adaptado por Posto", font=dict(size=16, family="Arial Black", color="white")),
             margin=dict(t=50, b=20),
         )
         style_plotly_chart(fig_adapt, use_container_width=True)
@@ -2895,6 +2903,7 @@ elif pagina == "♿ TAF Adaptado":
                 xaxis=dict(**GRID, tickangle=-45, tickfont=dict(size=11)),
                 yaxis=dict(**GRID, tickfont=dict(size=12)),
                 font=dict(size=13),
+                title=dict(text="Exercícios Realizados (TAF Adaptado)", font=dict(size=16, family="Arial Black", color="white")),
                 margin=dict(t=50, b=20),
             )
             style_plotly_chart(fig_ex, use_container_width=True)
