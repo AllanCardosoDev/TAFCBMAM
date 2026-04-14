@@ -57,6 +57,74 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SISTEMA DE AUTENTICAÇÃO
+# ══════════════════════════════════════════════════════════════════════════════
+
+def verificar_autenticacao() -> bool:
+    """Verifica se o usuário está autenticado."""
+    return st.session_state.get("autenticado", False)
+
+
+def tela_login():
+    """Exibe a tela de login."""
+    # Credenciais padrão (pode ser alterado para usar arquivo ou banco de dados)
+    USUARIOS_VALIDOS = {
+        "admin": "cbmam2024",
+        "user": "taf2024",
+        "bm6": "taf2026"
+    }
+    
+    # Layout centralizado da tela de login
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        st.markdown("<h1 style='text-align: center; margin-top: 60px;'>🔥 CBMAM</h1>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align: center; color: #888;'>Dashboard TAF</h3>", unsafe_allow_html=True)
+        st.markdown("<hr>", unsafe_allow_html=True)
+        
+        st.markdown("<h4 style='text-align: center;'>Login</h4>", unsafe_allow_html=True)
+        
+        usuario = st.text_input("👤 Usuário", placeholder="Digite seu usuário")
+        senha = st.text_input("🔐 Senha", type="password", placeholder="Digite sua senha")
+        
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            if st.button("🔓 Entrar", use_container_width=True):
+                if usuario in USUARIOS_VALIDOS and USUARIOS_VALIDOS[usuario] == senha:
+                    st.session_state.autenticado = True
+                    st.session_state.user_name = usuario
+                    st.success("✅ Autenticação bem-sucedida!")
+                    st.rerun()
+                else:
+                    st.error("❌ Usuário ou senha incorretos!")
+        
+        st.markdown("<div style='margin-top: 40px; padding: 20px; background: #f0f0f0; border-radius: 10px;'>", unsafe_allow_html=True)
+        st.markdown("##### 📌 Credenciais de Teste", unsafe_allow_html=True)
+        st.code("admin / cbmam2024\nuser / taf2024\nbm6 / taf2026", language=None)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
+# Verificar autenticação no início
+if not verificar_autenticacao():
+    tela_login()
+    st.stop()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SIDEBAR - Controles e Informações do Usuário
+# ══════════════════════════════════════════════════════════════════════════════
+
+with st.sidebar:
+    st.markdown(f"**👤 Usuário:** {st.session_state.user_name}", unsafe_allow_html=True)
+    if st.button("🔓 Sair", use_container_width=True):
+        st.session_state.autenticado = False
+        st.session_state.user_name = None
+        st.success("✅ Desconectado com sucesso!")
+        st.rerun()
+    st.markdown("---")
+
+
 # Toggle de tema para compatibilidade (Escuro / Claro)
 tema_escolhido = st.sidebar.radio("Tema", ("Escuro", "Claro"), index=0)
 
