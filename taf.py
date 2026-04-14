@@ -1009,45 +1009,54 @@ def carregar_dados():
                     # Limpar NATACAO_SEG (converter "01'04" para 64 segundos, etc)
                     if 'NATACAO_SEG' in df.columns:
                         def converter_tempo_para_segundos(val):
-                            """Converte formato 'MM'SS' ou MM:SS ou apenas números para segundos"""
+                            """Converte formato MM'SS, M'SS, ou apenas números para segundos"""
                             if pd.isna(val) or val == '':
                                 return np.nan
                             s = str(val).strip()
-                            if not s or s.upper() in ('NÃO', 'NAN'):
+                            if not s or s.upper() in ('NÃO', 'NAN', 'INAPTO', 'NÃO COMPARECEU'):
                                 return np.nan
-                            
-                            # Remove aspas
-                            s = s.replace('"', '').replace("'", '')
-                            
-                            # Trata formato "01 04" (minutos e segundos separados)
-                            partes = s.split()
-                            if len(partes) >= 2:
+
+                            # Remove aspas duplas (artefato CSV), mantém apóstrofo por ora
+                            s = s.replace('"', '').strip()
+
+                            # Formato M'SS ou MM'SS (apóstrofo como separador min/seg)
+                            if "'" in s:
+                                partes = s.split("'")
+                                # Apóstrofo no final (ex: "51'", "40'") = já é segundos
+                                if len(partes) == 2 and partes[0].strip().isdigit() and not partes[1].strip():
+                                    try:
+                                        return float(partes[0].strip())
+                                    except:
+                                        pass
+                                # Formato M'SS ou MM'SS
                                 try:
-                                    # Tenta se é "01 04" ou "01'04" (tem 1 min e 4 seg)
-                                    minutos = int(partes[0])
-                                    segundos = int(partes[1])
-                                    return minutos * 60 + segundos
+                                    minutos = int(partes[0].strip())
+                                    seg_str = partes[1].strip() if len(partes) > 1 else '0'
+                                    segundos = int(seg_str) if seg_str else 0
+                                    if minutos < 60 and segundos < 60:
+                                        return float(minutos * 60 + segundos)
                                 except:
                                     pass
-                            
-                            # Se tem dois dígitos separados por espaço após limpar
-                            # Exemplo: "0104" pode ser "01 04" = 1 min 4 seg
+
+                            # Remove apóstrofo restante
+                            s = s.replace("'", '').strip()
+
+                            # Formato MMSS com 4 dígitos (ex: "0104" = 1min4seg)
                             if len(s) == 4 and s.isdigit():
                                 try:
                                     minutos = int(s[:2])
                                     segundos = int(s[2:])
-                                    if minutos < 60 and segundos < 60:  # Validar
-                                        return minutos * 60 + segundos
+                                    if minutos < 60 and segundos < 60:
+                                        return float(minutos * 60 + segundos)
                                 except:
                                     pass
-                            
-                            # Se é um único número, já é segundos
+
+                            # Número puro = já é segundos
                             try:
-                                resultado = float(s)
-                                return resultado
+                                return float(s)
                             except:
                                 return np.nan
-                        
+
                         df['NATACAO_SEG'] = df['NATACAO_SEG'].apply(converter_tempo_para_segundos)
                     
                     df['BARRA_VALOR'] = pd.to_numeric(df.get('BARRA_VALOR', np.nan), errors='coerce')
